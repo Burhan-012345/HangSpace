@@ -1,0 +1,235 @@
+{% extends "base.html" %} {% block title %}{{ user.display_name }} - HangSpace{%
+endblock %} {% block content %}
+<link
+  href="{{ url_for('static', filename='css/profile.css') }}"
+  rel="stylesheet"
+/>
+<div class="profile-container">
+  <!-- Back Button -->
+  <div style="margin-bottom: 1rem">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="profile-avatar">
+      {{ user.display_name[0]|upper if user.display_name else
+      user.username[0]|upper }}
+    </div>
+
+    <h1 class="profile-name">
+      {{ user.display_name if user.display_name else user.username }}
+    </h1>
+    <div class="profile-username">@{{ user.username }}</div>
+
+    {% if user.status %}
+    <div class="profile-status">"{{ user.status }}"</div>
+    {% endif %}
+
+    <div class="profile-status">
+      <span class="status-{{ 'online' if user.is_online else 'offline' }}">
+        <i class="fas fa-circle"></i>
+        {{ 'Online' if user.is_online else 'Offline' }}
+      </span>
+      {% if not user.is_online and user.last_seen %} • Last seen {{
+      user.last_seen.strftime('%b %d at %H:%M') }} {% endif %}
+    </div>
+
+    <div class="profile-actions">
+      {% if is_friend %}
+      <button
+        class="btn btn-primary"
+        onclick="startChatWithUser('{{ user._id }}')"
+      >
+        <i class="fas fa-comment"></i> Send Message
+      </button>
+      <button
+        class="btn btn-secondary"
+        onclick="removeFriend('{{ user._id }}')"
+      >
+        <i class="fas fa-user-minus"></i> Remove Friend
+      </button>
+      {% elif has_pending_request %}
+      <button class="btn btn-secondary" disabled>
+        <i class="fas fa-clock"></i> Request Pending
+      </button>
+      {% else %}
+      <button
+        class="btn btn-primary"
+        onclick="sendFriendRequest('{{ user._id }}')"
+      >
+        <i class="fas fa-user-plus"></i> Add Friend
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Profile Stats -->
+  <div class="profile-stats">
+    <div class="stat-card">
+      <div class="stat-number">
+        {{ user.friends|length if user.friends else 0 }}
+      </div>
+      <div class="stat-label">Friends</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">0</div>
+      <div class="stat-label">Groups</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">
+        {{ user.created_at.strftime('%b %Y') if user.created_at }}
+      </div>
+      <div class="stat-label">Member Since</div>
+    </div>
+  </div>
+
+  <!-- Mutual Friends Section -->
+  <div
+    style="
+      background: var(--primary-white);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: var(--shadow);
+    "
+  >
+    <h3 style="color: var(--text-dark); margin-bottom: 1rem">About</h3>
+    <div style="color: var(--text-light)">
+      {% if user.status %}
+      <p><strong>Status:</strong> {{ user.status }}</p>
+      {% endif %}
+      <p><strong>Username:</strong> @{{ user.username }}</p>
+      <p>
+        <strong>Profile Created:</strong> {{ user.created_at.strftime('%B %d,
+        %Y') if user.created_at }}
+      </p>
+      <p>
+        <strong>Status:</strong>
+        <span class="status-{{ 'online' if user.is_online else 'offline' }}">
+          {{ 'Online' if user.is_online else 'Offline' }}
+        </span>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  function sendFriendRequest(userId) {
+    fetch("/api/send-friend-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Friend request sent!", "success");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          showNotification(
+            data.error || "Failed to send friend request",
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error sending friend request:", error);
+        showNotification("Error sending friend request", "error");
+      });
+  }
+
+  function startChatWithUser(userId) {
+    fetch("/api/create-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        participants: [userId],
+        is_group: false,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.chat_id) {
+          window.location.href = `/chat/${data.chat_id}`;
+        } else {
+          showNotification("Failed to start chat", "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error starting chat:", error);
+        showNotification("Error starting chat", "error");
+      });
+  }
+
+  function removeFriend(userId) {
+    if (confirm("Are you sure you want to remove this friend?")) {
+      fetch("/api/remove-friend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ friend_id: userId }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            showNotification("Friend removed", "success");
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            showNotification(data.error || "Failed to remove friend", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error removing friend:", error);
+          showNotification("Error removing friend", "error");
+        });
+    }
+  }
+
+  function showNotification(message, type) {
+    // Simple notification implementation
+    const notification = document.createElement("div");
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    `;
+
+    if (type === "success") {
+      notification.style.background = "var(--success)";
+    } else if (type === "error") {
+      notification.style.background = "var(--error)";
+    } else {
+      notification.style.background = "var(--primary-blue)";
+    }
+
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.transform = "translateX(100%)";
+      notification.style.opacity = "0";
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
+  }
+</script>
+{% endblock %}

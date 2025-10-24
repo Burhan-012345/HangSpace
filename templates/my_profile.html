@@ -1,0 +1,982 @@
+{% extends "base.html" %} {% block title %}My Profile - HangSpace{% endblock %}
+{% block content %}
+<div class="profile-container">
+  <!-- Back Button -->
+  <div style="margin-bottom: 1rem">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Profile Header -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-user"></i> My Profile</h2>
+    </div>
+    <div class="card-body">
+      <!-- Profile Picture Section -->
+      <div
+        class="avatar-section"
+        style="text-align: center; margin-bottom: 2rem"
+      >
+        <div class="profile-pic-container">
+          {% if user.avatar_url %}
+          <img
+            src="{{ user.avatar_url }}"
+            alt="Profile Picture"
+            class="profile-pic-large"
+            id="profilePicPreview"
+            onerror="this.style.display='none'; document.getElementById('defaultAvatar').style.display='flex';"
+          />
+          {% endif %}
+          <div
+            id="defaultAvatar"
+            class="profile-avatar-large"
+            style="{% if user.avatar_url %}display: none;{% endif %}"
+          >
+            {{ user.display_name[0]|upper if user.display_name else
+            user.username[0]|upper }}
+          </div>
+        </div>
+
+        <div style="margin-top: 1rem">
+          <!-- Upload Profile Picture Form -->
+          <form
+            id="uploadProfilePicForm"
+            enctype="multipart/form-data"
+            style="display: inline-block"
+          >
+            <input
+              type="file"
+              id="profilePicInput"
+              name="profile_pic"
+              accept="image/*"
+              style="display: none"
+              onchange="handleProfilePicUpload()"
+            />
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="document.getElementById('profilePicInput').click()"
+            >
+              <i class="fas fa-camera"></i> Change Photo
+            </button>
+          </form>
+
+          {% if user.avatar_url %}
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="removeProfilePic()"
+            style="margin-left: 0.5rem"
+          >
+            <i class="fas fa-trash"></i> Remove
+          </button>
+          {% endif %}
+        </div>
+
+        <p
+          style="
+            color: var(--text-light);
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+          "
+        >
+          Supported formats: JPG, PNG, GIF • Max size: 5MB
+        </p>
+
+        <!-- Upload Progress -->
+        <div id="uploadProgress" style="display: none; margin-top: 0.5rem">
+          <div
+            style="
+              background: var(--border-light);
+              border-radius: 10px;
+              height: 6px;
+              overflow: hidden;
+            "
+          >
+            <div
+              id="progressBar"
+              style="
+                background: var(--primary-blue);
+                height: 100%;
+                width: 0%;
+                transition: width 0.3s ease;
+              "
+            ></div>
+          </div>
+          <div
+            id="progressText"
+            style="
+              font-size: 0.8rem;
+              color: var(--text-light);
+              margin-top: 0.25rem;
+            "
+          >
+            Uploading...
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Information -->
+      <div class="profile-info-grid">
+        <div class="info-item">
+          <label><i class="fas fa-user"></i> Display Name</label>
+          <span class="info-value"
+            >{{ user.display_name if user.display_name else user.username
+            }}</span
+          >
+        </div>
+
+        <div class="info-item">
+          <label><i class="fas fa-at"></i> Username</label>
+          <span class="info-value">{{ user.username }}</span>
+        </div>
+
+        <div class="info-item">
+          <label><i class="fas fa-envelope"></i> Email</label>
+          <span class="info-value"
+            >{{ user.email if user.email else 'Not provided' }}</span
+          >
+        </div>
+
+        <div class="info-item">
+          <label><i class="fas fa-calendar"></i> Member Since</label>
+          <span class="info-value"
+            >{{ user.created_at.strftime('%B %d, %Y') if user.created_at else
+            'Unknown' }}</span
+          >
+        </div>
+
+        {% if user.status %}
+        <div class="info-item full-width">
+          <label><i class="fas fa-comment"></i> Status</label>
+          <span class="info-value status-message">"{{ user.status }}"</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    </div>
+    <div class="card-body">
+      <div class="quick-actions-grid">
+        <a href="{{ url_for('edit_profile') }}" class="quick-action-btn">
+          <i class="fas fa-edit"></i>
+          <span>Edit Profile</span>
+        </a>
+
+        <a href="{{ url_for('my_profile') }}#friends" class="quick-action-btn">
+          <i class="fas fa-users"></i>
+          <span>My Friends</span>
+          <span class="badge">{{ friends|length if friends else 0 }}</span>
+        </a>
+
+        <a href="{{ url_for('dashboard') }}" class="quick-action-btn">
+          <i class="fas fa-comments"></i>
+          <span>My Chats</span>
+        </a>
+
+        <button class="quick-action-btn" onclick="showNotificationSettings()">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Friends Section -->
+  <div class="card" id="friends">
+    <div class="card-header">
+      <h3><i class="fas fa-users"></i> My Friends</h3>
+      <span class="badge">{{ friends|length if friends else 0 }} friends</span>
+    </div>
+    <div class="card-body">
+      {% if friends and friends|length > 0 %}
+      <div class="friends-grid">
+        {% for friend in friends %}
+        <div class="friend-card">
+          <div class="friend-avatar">
+            {% if friend.avatar_url %}
+            <img
+              src="{{ friend.avatar_url }}"
+              alt="{{ friend.display_name if friend.display_name else friend.username }}"
+              class="friend-pic"
+            />
+            {% else %}
+            <div class="friend-avatar-default">
+              {{ (friend.display_name if friend.display_name else
+              friend.username)[0]|upper }}
+            </div>
+            {% endif %}
+            <div
+              class="status-indicator {{ 'online' if friend.is_online else 'offline' }}"
+            ></div>
+          </div>
+          <div class="friend-info">
+            <h4>
+              {{ friend.display_name if friend.display_name else friend.username
+              }}
+            </h4>
+            <p class="friend-username">@{{ friend.username }}</p>
+            {% if friend.status %}
+            <p class="friend-status">"{{ friend.status }}"</p>
+            {% endif %}
+          </div>
+          <div class="friend-actions">
+            <button
+              class="btn btn-sm btn-primary"
+              onclick="startChatWithFriend('{{ friend._id }}')"
+            >
+              <i class="fas fa-comment"></i> Chat
+            </button>
+            <button
+              class="btn btn-sm btn-secondary"
+              onclick="viewFriendProfile('{{ friend._id }}')"
+            >
+              <i class="fas fa-eye"></i> View
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i
+          class="fas fa-user-friends"
+          style="font-size: 3rem; color: var(--text-light); margin-bottom: 1rem"
+        ></i>
+        <h3>No friends yet</h3>
+        <p>Start connecting with people by sending friend requests!</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Find Friends
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="danger-zone-card">
+    <div class="danger-zone-header">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3 style="margin: 0; color: white">Danger Zone</h3>
+    </div>
+    <div class="danger-zone-content">
+      <div class="d-flex justify-between align-center">
+        <div>
+          <h4>Delete Profile</h4>
+          <p>
+            Permanently delete your profile and all associated data. This action
+            cannot be undone.
+          </p>
+        </div>
+        <button class="btn btn-danger" onclick="showDeleteConfirmation()">
+          <i class="fas fa-trash"></i> Delete Profile
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-exclamation-triangle"></i> Delete Profile</h3>
+    </div>
+    <div class="modal-body">
+      <p class="mb-2">
+        <strong>This action cannot be undone!</strong>
+      </p>
+      <p class="mb-3">
+        This will permanently delete your profile "<strong
+          >{{ user.display_name if user.display_name else user.username
+          }}</strong
+        >" and remove all your messages, friends, and chat history.
+      </p>
+      <div class="form-group">
+        <label for="confirmUsername" class="form-label">
+          Type your username to confirm:
+        </label>
+        <input
+          type="text"
+          id="confirmUsername"
+          class="form-input"
+          placeholder="{{ user.username }}"
+          oninput="checkDeleteConfirmation()"
+        />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideDeleteModal()">
+        <i class="fas fa-times"></i> Cancel
+      </button>
+      <button
+        id="deleteButton"
+        class="btn btn-danger"
+        disabled
+        onclick="deleteProfile()"
+      >
+        <i class="fas fa-trash"></i> Delete Profile
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_css %}
+<style>
+  .profile-pic-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .profile-pic-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-blue);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), #007acc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 3rem;
+    margin: 0 auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .info-item.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .info-item label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+  }
+
+  .info-value {
+    color: var(--text-light);
+    font-size: 1rem;
+  }
+
+  .status-message {
+    font-style: italic;
+    color: var(--primary-blue) !important;
+  }
+
+  .quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    background: var(--background);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .quick-action-btn:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .quick-action-btn i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quick-action-btn span {
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .badge {
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 12px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .friend-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--background);
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    gap: 1rem;
+  }
+
+  .friend-avatar {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .friend-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .friend-avatar-default {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), #007acc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+
+  .status-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+
+  .status-indicator.online {
+    background: var(--success);
+  }
+
+  .status-indicator.offline {
+    background: var(--text-light);
+  }
+
+  .friend-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .friend-info h4 {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .friend-username {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.8rem;
+  }
+
+  .friend-status {
+    margin: 0.25rem 0 0 0;
+    color: var(--primary-blue);
+    font-size: 0.8rem;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .friend-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+  }
+
+  .empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-content {
+    background-color: var(--primary-white);
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow);
+  }
+
+  .modal-header {
+    background: var(--error);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    background: var(--background);
+    border-radius: 0 0 1rem 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .danger-zone-card {
+    background: var(--error);
+    border-radius: 1rem;
+    margin-top: 2rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .danger-zone-header {
+    padding: 1.5rem;
+    color: white;
+  }
+
+  .danger-zone-content {
+    background: var(--primary-white);
+    padding: 1.5rem;
+  }
+
+  .d-flex {
+    display: flex;
+  }
+
+  .justify-between {
+    justify-content: space-between;
+  }
+
+  .align-center {
+    align-items: center;
+  }
+
+  .mb-2 {
+    margin-bottom: 0.5rem;
+  }
+
+  .mb-3 {
+    margin-bottom: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    background: var(--primary-white);
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.1);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--primary-blue);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #1a6fc9;
+  }
+
+  .btn-secondary {
+    background: var(--text-light);
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background: #6b7280;
+  }
+
+  .btn-danger {
+    background: var(--error);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-danger:disabled {
+    background: var(--text-light);
+    cursor: not-allowed;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+</style>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Initialize any profile-specific functionality
+    console.log("Profile page loaded");
+  });
+
+  function handleProfilePicUpload() {
+    const fileInput = document.getElementById("profilePicInput");
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      showNotification("Please select an image file", "error");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification("File size must be less than 5MB", "error");
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const previewImg = document.getElementById("profilePicPreview");
+      const defaultAvatar = document.getElementById("defaultAvatar");
+
+      if (!previewImg) {
+        // Create image element if it doesn't exist
+        const container = document.querySelector(".profile-pic-container");
+        const img = document.createElement("img");
+        img.id = "profilePicPreview";
+        img.className = "profile-pic-large";
+        img.alt = "Profile Picture";
+        img.src = e.target.result;
+        container.insertBefore(img, defaultAvatar);
+        defaultAvatar.style.display = "none";
+      } else {
+        previewImg.src = e.target.result;
+        previewImg.style.display = "block";
+        defaultAvatar.style.display = "none";
+      }
+    };
+    reader.readAsDataURL(file);
+
+    // Upload file
+    uploadProfilePic(file);
+  }
+
+  function uploadProfilePic(file) {
+    const formData = new FormData();
+    formData.append("profile_pic", file);
+
+    // Show progress
+    const progressDiv = document.getElementById("uploadProgress");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    progressDiv.style.display = "block";
+    progressBar.style.width = "0%";
+    progressText.textContent = "Uploading...";
+
+    fetch("/api/upload-profile-pic", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        progressDiv.style.display = "none";
+
+        if (data.success) {
+          showNotification("Profile picture updated successfully!", "success");
+          // Update the avatar URL in the image src to use the server URL
+          const previewImg = document.getElementById("profilePicPreview");
+          if (previewImg) {
+            previewImg.src = data.avatar_url + "?t=" + new Date().getTime(); // Cache bust
+          }
+        } else {
+          showNotification(
+            data.error || "Failed to upload profile picture",
+            "error"
+          );
+          // Revert to default avatar on error
+          revertToDefaultAvatar();
+        }
+      })
+      .catch((error) => {
+        console.error("Error uploading profile picture:", error);
+        progressDiv.style.display = "none";
+        showNotification("Error uploading profile picture", "error");
+        revertToDefaultAvatar();
+      });
+
+    // Simulate progress (since we can't get real progress with fetch)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+      progress += 5;
+      progressBar.style.width = progress + "%";
+      if (progress >= 90) {
+        clearInterval(progressInterval);
+      }
+    }, 100);
+  }
+
+  function removeProfilePic() {
+    if (!confirm("Are you sure you want to remove your profile picture?")) {
+      return;
+    }
+
+    fetch("/api/remove-profile-pic", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Profile picture removed successfully!", "success");
+          revertToDefaultAvatar();
+        } else {
+          showNotification(
+            data.error || "Failed to remove profile picture",
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error removing profile picture:", error);
+        showNotification("Error removing profile picture", "error");
+      });
+  }
+
+  function revertToDefaultAvatar() {
+    const previewImg = document.getElementById("profilePicPreview");
+    const defaultAvatar = document.getElementById("defaultAvatar");
+
+    if (previewImg) {
+      previewImg.style.display = "none";
+    }
+    defaultAvatar.style.display = "flex";
+  }
+
+  function startChatWithFriend(friendId) {
+    fetch("/start-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ friend_id: friendId }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          window.location.href = `/chat/${data.chat_id}`;
+        } else {
+          showNotification(data.error || "Failed to start chat", "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error starting chat:", error);
+        showNotification("Error starting chat", "error");
+      });
+  }
+
+  function viewFriendProfile(friendId) {
+    window.location.href = `/user/${friendId}`;
+  }
+
+  function showNotificationSettings() {
+    showNotification("Notification settings coming soon!", "info");
+  }
+
+  // Delete account functionality
+  function showDeleteConfirmation() {
+    const modal = document.getElementById("deleteModal");
+    modal.style.display = "block";
+  }
+
+  function hideDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    modal.style.display = "none";
+    document.getElementById("confirmUsername").value = "";
+    document.getElementById("deleteButton").disabled = true;
+  }
+
+  function checkDeleteConfirmation() {
+    const confirmInput = document.getElementById("confirmUsername");
+    const deleteButton = document.getElementById("deleteButton");
+    const currentUsername = "{{ user.username }}";
+
+    deleteButton.disabled = confirmInput.value !== currentUsername;
+  }
+
+  function deleteProfile() {
+    const deleteButton = document.getElementById("deleteButton");
+    if (deleteButton.disabled) return;
+
+    if (!confirm("Are you absolutely sure? This action cannot be undone!")) {
+      return;
+    }
+
+    fetch("/api/delete-profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Profile deleted successfully", "success");
+          setTimeout(() => {
+            window.location.href = "/logout";
+          }, 2000);
+        } else {
+          showNotification(data.error || "Failed to delete profile", "error");
+          hideDeleteModal();
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting profile:", error);
+        showNotification("Error deleting profile", "error");
+        hideDeleteModal();
+      });
+  }
+
+  // Close modal when clicking outside
+  window.onclick = function (event) {
+    const modal = document.getElementById("deleteModal");
+    if (event.target === modal) {
+      hideDeleteModal();
+    }
+  };
+
+  function showNotification(message, type) {
+    const notification = document.createElement("div");
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    `;
+
+    if (type === "success") {
+      notification.style.background = "var(--success)";
+    } else if (type === "error") {
+      notification.style.background = "var(--error)";
+    } else {
+      notification.style.background = "var(--primary-blue)";
+    }
+
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.style.transform = "translateX(100%)";
+      notification.style.opacity = "0";
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  }
+</script>
+{% endblock %}

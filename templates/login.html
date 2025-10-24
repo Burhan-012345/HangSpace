@@ -1,0 +1,1269 @@
+{% extends "base.html" %} {% block title %}Login - HangSpace{% endblock %} {%
+block content %}
+<div class="login-container">
+  <div class="login-background">
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+    </div>
+  </div>
+
+  <div class="login-content">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-container">
+          <i class="fas fa-comments logo-icon"></i>
+          <h1 class="logo-text">HangSpace</h1>
+        </div>
+        <p class="login-subtitle">
+          Welcome back! Sign in to continue your conversations
+        </p>
+      </div>
+
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <div class="alert alert-error">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ messages[0] }}
+      </div>
+      {% endif %} {% endwith %}
+
+      <div class="login-options">
+        <a
+          href="{{ url_for('google_auth') }}"
+          class="btn btn-primary btn-login-google"
+        >
+          <i class="fab fa-google"></i>
+          Continue with Google
+        </a>
+
+        <div class="divider">
+          <span>or</span>
+        </div>
+
+        <button class="btn btn-secondary btn-demo" onclick="showDemoAlert()">
+          <i class="fas fa-play-circle"></i>
+          Try Demo Version
+        </button>
+      </div>
+
+      <div class="login-features">
+        <div class="feature-item">
+          <i class="fas fa-shield-alt"></i>
+          <span>Secure & Private</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-bolt"></i>
+          <span>Real-time Chat</span>
+        </div>
+        <div class="feature-item">
+          <i class="fas fa-users"></i>
+          <span>Connect Friends</span>
+        </div>
+      </div>
+
+      <div class="login-footer">
+        <!-- In the login-footer section -->
+        <p class="terms-text">
+          By continuing, you agree to our
+          <a href="{{ url_for('terms') }}" class="terms-link"
+            >Terms of Service</a
+          >
+          and
+          <a href="{{ url_for('privacy') }}" class="terms-link"
+            >Privacy Policy</a
+          >
+        </p>
+        <a href="{{ url_for('learn_more') }}" class="learn-more-link">
+          <i class="fas fa-info-circle"></i>
+          Learn more about HangSpace
+        </a>
+      </div>
+    </div>
+
+    <div class="login-side-panel">
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <i class="fas fa-quote-left"></i>
+          <p>
+            "HangSpace revolutionized how our team communicates. The real-time
+            features are incredible!"
+          </p>
+          <div class="testimonial-author">
+            <div class="author-avatar">SD</div>
+            <div class="author-info">
+              <strong>Sarah Davis</strong>
+              <span>Project Manager</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-number">10K+</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Messages Daily</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">99.9%</div>
+          <div class="stat-label">Uptime</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .login-container {
+    min-height: 100vh;
+    background: linear-gradient(
+      135deg,
+      var(--primary-dark) 0%,
+      var(--secondary-dark) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .floating-shapes {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0, 243, 255, 0.1);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .shape-1 {
+    width: 100px;
+    height: 100px;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  .shape-2 {
+    width: 150px;
+    height: 150px;
+    top: 60%;
+    right: 10%;
+    animation-delay: 2s;
+  }
+
+  .shape-3 {
+    width: 80px;
+    height: 80px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+  }
+
+  .shape-4 {
+    width: 120px;
+    height: 120px;
+    top: 30%;
+    right: 20%;
+    animation-delay: 1s;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(180deg);
+    }
+  }
+
+  .login-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    max-width: 1000px;
+    width: 90%;
+    z-index: 2;
+    position: relative;
+  }
+
+  .login-card {
+    background: var(--secondary-dark);
+    padding: 3rem;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .logo-icon {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+  }
+
+  .logo-text {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+  }
+
+  .login-subtitle {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+  }
+
+  .alert-error {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.2);
+  }
+
+  .login-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .btn-login-google {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .btn-demo {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--tertiary-dark);
+    border: 1px solid var(--border-light);
+  }
+
+  .btn-demo:hover {
+    background: var(--secondary-dark);
+    border-color: var(--primary-blue);
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .divider span {
+    padding: 0 1rem;
+  }
+
+  .login-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--background-light);
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-light);
+  }
+
+  .feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.8rem;
+  }
+
+  .feature-item i {
+    color: var(--primary-blue);
+    font-size: 1.25rem;
+  }
+
+  .login-footer {
+    text-align: center;
+  }
+
+  .terms-text {
+    color: var(--text-light);
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+
+  .terms-link {
+    color: var(--primary-blue);
+    text-decoration: none;
+  }
+
+  .terms-link:hover {
+    text-decoration: underline;
+  }
+
+  .learn-more-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: var(--transition-smooth);
+  }
+
+  .learn-more-link:hover {
+    color: var(--primary-blue);
+  }
+
+  .login-side-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .testimonial {
+    background: var(--secondary-dark);
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow);
+  }
+
+  .testimonial-content i:first-child {
+    color: var(--primary-blue);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .testimonial-content p {
+    color: var(--text-dark);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .author-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-dark);
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+
+  .author-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .author-info strong {
+    color: var(--text-dark);
+  }
+
+  .author-info span {
+    color: var(--text-light);
+    font-size: 0.8rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-item {
+    background: var(--secondary-dark);
+    padding: 1.5rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-light);
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    color: var(--text-light);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 768px) {
+    .login-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .login-card {
+      padding: 2rem;
+    }
+
+    .login-side-panel {
+      display: none;
+    }
+
+    .login-features {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .logo-container {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .logo-text {
+      font-size: 2rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-card {
+      padding: 1.5rem;
+      margin: 1rem;
+    }
+
+    .logo-text {
+      font-size: 1.75rem;
+    }
+
+    .login-subtitle {
+      font-size: 1rem;
+    }
+  }
+
+  /* Demo Modal Styles */
+  .demo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+  }
+
+  .demo-modal-content {
+    background: var(--secondary-dark);
+    border-radius: 1rem;
+    border: 1px solid var(--border-light);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s ease;
+  }
+
+  .demo-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--background-light);
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .demo-modal-header h3 {
+    margin: 0;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .demo-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition-smooth);
+  }
+
+  .demo-close-btn:hover {
+    background: var(--tertiary-dark);
+    color: var(--text-dark);
+  }
+
+  .demo-modal-body {
+    padding: 1.5rem;
+  }
+
+  .demo-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    transition: var(--transition-smooth);
+  }
+
+  .demo-option:hover {
+    border-color: var(--primary-blue);
+    transform: translateX(5px);
+  }
+
+  .demo-option i {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    width: 40px;
+    text-align: center;
+  }
+
+  .demo-option div {
+    flex: 1;
+  }
+
+  .demo-option h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-dark);
+  }
+
+  .demo-option p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .demo-modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+    background: var(--background-light);
+    border-radius: 0 0 1rem 1rem;
+  }
+
+  .demo-modal-footer p {
+    margin-bottom: 1rem;
+    color: var(--text-light);
+  }
+
+  /* Video Demo Styles */
+  .video-placeholder {
+    background: var(--background-light);
+    border-radius: 0.75rem;
+    padding: 3rem;
+    text-align: center;
+    border: 2px dashed var(--border-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .video-placeholder i {
+    font-size: 3rem;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .video-placeholder p {
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .video-duration {
+    color: var(--text-light);
+    font-size: 0.9rem;
+  }
+
+  .playing-animation {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    gap: 3px;
+    height: 40px;
+    margin-bottom: 1rem;
+  }
+
+  .playing-bar {
+    width: 4px;
+    background: var(--primary-blue);
+    border-radius: 2px;
+    animation: playing 1s ease-in-out infinite;
+  }
+
+  .playing-bar:nth-child(1) {
+    animation-delay: 0s;
+    height: 10px;
+  }
+  .playing-bar:nth-child(2) {
+    animation-delay: 0.1s;
+    height: 20px;
+  }
+  .playing-bar:nth-child(3) {
+    animation-delay: 0.2s;
+    height: 30px;
+  }
+  .playing-bar:nth-child(4) {
+    animation-delay: 0.3s;
+    height: 20px;
+  }
+  .playing-bar:nth-child(5) {
+    animation-delay: 0.4s;
+    height: 10px;
+  }
+
+  @keyframes playing {
+    0%,
+    100% {
+      transform: scaleY(1);
+    }
+    50% {
+      transform: scaleY(1.5);
+    }
+  }
+
+  .video-features h4 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+  }
+
+  .video-features ul {
+    color: var(--text-light);
+    padding-left: 1.5rem;
+  }
+
+  .video-features li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Gallery Styles */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .gallery-item {
+    text-align: center;
+  }
+
+  .gallery-image {
+    width: 100%;
+    height: 100px;
+    background: var(--background-light);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-light);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gallery-image::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-blue), transparent);
+    opacity: 0.3;
+  }
+
+  .gallery-image.chat-demo::after {
+    content: "💬";
+    font-size: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .gallery-image.friends-demo::after {
+    content: "👥";
+    font-size: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .gallery-image.themes-demo::after {
+    content: "🎨";
+    font-size: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .gallery-image.mobile-demo::after {
+    content: "📱";
+    font-size: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .gallery-item p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.8rem;
+  }
+
+  /* Loading and Success States */
+  .loading-spinner {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .loading-spinner .spinner {
+    border: 3px solid var(--secondary-dark);
+    border-top: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  .success-message {
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .success-message i {
+    font-size: 3rem;
+    color: var(--success);
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .success-message h4 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+  }
+
+  .demo-credentials {
+    background: var(--background-light);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    text-align: left;
+  }
+
+  .demo-credentials p {
+    margin: 0.5rem 0;
+    color: var(--text-light);
+  }
+
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .demo-modal-content {
+      width: 95%;
+      margin: 1rem;
+    }
+
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .demo-option {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  // Main demo function - called when "Try Demo Version" button is clicked
+  function showDemoAlert() {
+    // Create a modal for demo features
+    const demoModal = document.createElement("div");
+    demoModal.className = "demo-modal";
+    demoModal.innerHTML = `
+        <div class="demo-modal-content">
+            <div class="demo-modal-header">
+                <h3><i class="fas fa-play-circle"></i> HangSpace Demo</h3>
+                <button class="demo-close-btn">&times;</button>
+            </div>
+            <div class="demo-modal-body">
+                <div class="demo-option">
+                    <i class="fas fa-video"></i>
+                    <div>
+                        <h4>Video Tour</h4>
+                        <p>Watch a 2-minute overview of HangSpace features</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="playVideoTour()">Watch</button>
+                </div>
+                
+                <div class="demo-option">
+                    <i class="fas fa-images"></i>
+                    <div>
+                        <h4>Feature Gallery</h4>
+                        <p>Browse screenshots of key features</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="showFeatureGallery()">View</button>
+                </div>
+                
+                <div class="demo-option">
+                    <i class="fas fa-user-friends"></i>
+                    <div>
+                        <h4>Test Account</h4>
+                        <p>Try HangSpace with a temporary test account</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="createTestAccount()">Try Now</button>
+                </div>
+            </div>
+            <div class="demo-modal-footer">
+                <p>Prefer the real experience?</p>
+                <a href="{{ url_for('google_auth') }}" class="btn btn-primary">Sign in with Google</a>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(demoModal);
+
+    // Close modal handlers
+    demoModal.querySelector(".demo-close-btn").onclick = () =>
+      demoModal.remove();
+    demoModal.onclick = (e) => {
+      if (e.target === demoModal) demoModal.remove();
+    };
+  }
+
+  // Video tour functionality
+  function playVideoTour() {
+    // Close current modal
+    document.querySelector(".demo-modal")?.remove();
+
+    const videoModal = document.createElement("div");
+    videoModal.className = "demo-modal";
+    videoModal.innerHTML = `
+        <div class="demo-modal-content video-modal">
+            <div class="demo-modal-header">
+                <h3><i class="fas fa-video"></i> HangSpace Tour</h3>
+                <button class="demo-close-btn">&times;</button>
+            </div>
+            <div class="demo-modal-body">
+                <div class="video-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                    <p>HangSpace Feature Overview</p>
+                    <div class="video-duration">2:30</div>
+                </div>
+                <div class="video-features">
+                    <h4>What you'll see:</h4>
+                    <ul>
+                        <li>Real-time messaging in action</li>
+                        <li>Friend system and connections</li>
+                        <li>Theme customization</li>
+                        <li>Mobile responsiveness</li>
+                        <li>Smart notifications</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="demo-modal-footer">
+                <button class="btn btn-primary" onclick="showFeatureGallery()">View Feature Gallery</button>
+                <button class="btn btn-secondary" onclick="createTestAccount()">Try Test Account</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(videoModal);
+
+    // Auto-play simulation
+    setTimeout(() => {
+      const placeholder = videoModal.querySelector(".video-placeholder");
+      placeholder.innerHTML = `
+            <div class="playing-animation">
+                <div class="playing-bar"></div>
+                <div class="playing-bar"></div>
+                <div class="playing-bar"></div>
+                <div class="playing-bar"></div>
+                <div class="playing-bar"></div>
+            </div>
+            <p>Playing: HangSpace Feature Overview</p>
+            <div class="video-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="video-time">1:15 / 2:30</div>
+            </div>
+        `;
+    }, 1000);
+
+    // Close handlers
+    videoModal.querySelector(".demo-close-btn").onclick = () =>
+      videoModal.remove();
+    videoModal.onclick = (e) => {
+      if (e.target === videoModal) videoModal.remove();
+    };
+  }
+
+  // Feature gallery functionality
+  function showFeatureGallery() {
+    document.querySelector(".demo-modal")?.remove();
+
+    const galleryModal = document.createElement("div");
+    galleryModal.className = "demo-modal";
+    galleryModal.innerHTML = `
+        <div class="demo-modal-content gallery-modal">
+            <div class="demo-modal-header">
+                <h3><i class="fas fa-images"></i> Feature Gallery</h3>
+                <button class="demo-close-btn">&times;</button>
+            </div>
+            <div class="demo-modal-body">
+                <div class="gallery-grid">
+                    <div class="gallery-item" onclick="showFeatureDetail('chat')">
+                        <div class="gallery-image chat-demo"></div>
+                        <p>Real-time Chat</p>
+                    </div>
+                    <div class="gallery-item" onclick="showFeatureDetail('friends')">
+                        <div class="gallery-image friends-demo"></div>
+                        <p>Friend System</p>
+                    </div>
+                    <div class="gallery-item" onclick="showFeatureDetail('themes')">
+                        <div class="gallery-image themes-demo"></div>
+                        <p>Custom Themes</p>
+                    </div>
+                    <div class="gallery-item" onclick="showFeatureDetail('mobile')">
+                        <div class="gallery-image mobile-demo"></div>
+                        <p>Mobile Experience</p>
+                    </div>
+                </div>
+                <div class="feature-description">
+                    <p>Click on any feature to learn more about it</p>
+                </div>
+            </div>
+            <div class="demo-modal-footer">
+                <button class="btn btn-primary" onclick="createTestAccount()">Try Test Account</button>
+                <button class="btn btn-secondary" onclick="playVideoTour()">Watch Video Tour</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(galleryModal);
+
+    galleryModal.querySelector(".demo-close-btn").onclick = () =>
+      galleryModal.remove();
+    galleryModal.onclick = (e) => {
+      if (e.target === galleryModal) galleryModal.remove();
+    };
+  }
+
+  // Feature detail view
+  function showFeatureDetail(feature) {
+    const featureDetails = {
+      chat: {
+        title: "Real-time Chat",
+        description:
+          "Experience instant messaging with live typing indicators, read receipts, and seamless message delivery.",
+        features: [
+          "Instant message delivery",
+          "Live typing indicators",
+          "Read receipts",
+          "Message history",
+          "File sharing",
+        ],
+      },
+      friends: {
+        title: "Friend System",
+        description:
+          "Build your network with our intuitive friend management system. Connect, chat, and stay in touch.",
+        features: [
+          "Friend requests",
+          "Connection management",
+          "Friend discovery",
+          "Online status",
+          "Profile customization",
+        ],
+      },
+      themes: {
+        title: "Custom Themes",
+        description:
+          "Personalize your chat experience with multiple themes and customization options.",
+        features: [
+          "Dark & Light modes",
+          "Color customization",
+          "Background themes",
+          "Font options",
+          "Layout preferences",
+        ],
+      },
+      mobile: {
+        title: "Mobile Experience",
+        description:
+          "Chat on the go with our fully responsive design that works perfectly on all devices.",
+        features: [
+          "Responsive design",
+          "Mobile-optimized interface",
+          "Push notifications",
+          "Offline support",
+          "Cross-device sync",
+        ],
+      },
+    };
+
+    const detail = featureDetails[feature];
+    const galleryModal = document.querySelector(".gallery-modal");
+
+    if (galleryModal) {
+      galleryModal.querySelector(".demo-modal-body").innerHTML = `
+            <div class="feature-detail">
+                <button class="back-btn" onclick="showFeatureGallery()">
+                    <i class="fas fa-arrow-left"></i> Back to Gallery
+                </button>
+                <h4>${detail.title}</h4>
+                <p>${detail.description}</p>
+                <div class="feature-highlights">
+                    <h5>Key Features:</h5>
+                    <ul>
+                        ${detail.features.map((f) => `<li>${f}</li>`).join("")}
+                    </ul>
+                </div>
+                <div class="feature-preview">
+                    <div class="preview-image ${feature}-demo-large"></div>
+                </div>
+            </div>
+        `;
+    }
+  }
+
+  // Test account creation
+  function createTestAccount() {
+    document.querySelector(".demo-modal")?.remove();
+
+    // Simulate test account creation
+    const loadingModal = document.createElement("div");
+    loadingModal.className = "demo-modal";
+    loadingModal.innerHTML = `
+        <div class="demo-modal-content">
+            <div class="demo-modal-header">
+                <h3><i class="fas fa-user-friends"></i> Creating Test Account</h3>
+            </div>
+            <div class="demo-modal-body">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Setting up your temporary account...</p>
+                    <div class="loading-steps">
+                        <div class="step">Creating profile...</div>
+                        <div class="step">Setting up demo data...</div>
+                        <div class="step">Configuring features...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(loadingModal);
+
+    // Simulate loading steps
+    const steps = loadingModal.querySelectorAll(".loading-steps .step");
+    let currentStep = 0;
+
+    const stepInterval = setInterval(() => {
+      if (currentStep < steps.length) {
+        steps[currentStep].classList.add("completed");
+        currentStep++;
+      } else {
+        clearInterval(stepInterval);
+        showTestAccountReady(loadingModal);
+      }
+    }, 800);
+  }
+
+  function showTestAccountReady(loadingModal) {
+    loadingModal.innerHTML = `
+        <div class="demo-modal-content">
+            <div class="demo-modal-header">
+                <h3><i class="fas fa-check-circle"></i> Ready to Explore!</h3>
+            </div>
+            <div class="demo-modal-body">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>Test Account Created</h4>
+                    <p>You now have temporary access to HangSpace features for 30 minutes.</p>
+                    <div class="demo-credentials">
+                        <div class="credential-item">
+                            <label>Username:</label>
+                            <span>demo_user_${Math.floor(
+                              Math.random() * 1000
+                            )}</span>
+                        </div>
+                        <div class="credential-item">
+                            <label>Access Level:</label>
+                            <span>Full Features</span>
+                        </div>
+                        <div class="credential-item">
+                            <label>Duration:</label>
+                            <span>30 minutes</span>
+                        </div>
+                    </div>
+                    <div class="demo-features-access">
+                        <h5>You can now explore:</h5>
+                        <ul>
+                            <li>Real-time messaging</li>
+                            <li>Friend system</li>
+                            <li>Theme customization</li>
+                            <li>All core features</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="demo-modal-footer">
+                <button class="btn btn-primary" onclick="redirectToDemo()">Enter Demo Dashboard</button>
+                <button class="btn btn-secondary" onclick="this.closest('.demo-modal').remove()">Maybe Later</button>
+            </div>
+        </div>
+    `;
+  }
+
+  // Redirect to demo (placeholder - you can implement actual demo later)
+  function redirectToDemo() {
+    // For now, redirect to the main login with a demo parameter
+    // You can implement actual demo functionality later
+    window.location.href = "{{ url_for('login') }}?demo=true";
+
+    // Alternatively, show a message that demo is being developed
+    // alert('Demo dashboard is coming soon! For now, please sign up to experience all features.');
+  }
+
+  // Interactive effects for login page
+  document.addEventListener("DOMContentLoaded", function () {
+    const buttons = document.querySelectorAll(".btn");
+
+    buttons.forEach((button) => {
+      button.addEventListener("mouseenter", function () {
+        this.style.transform = "translateY(-2px)";
+      });
+
+      button.addEventListener("mouseleave", function () {
+        this.style.transform = "translateY(0)";
+      });
+    });
+
+    // Add parallax effect to floating shapes
+    window.addEventListener("mousemove", function (e) {
+      const shapes = document.querySelectorAll(".shape");
+      const mouseX = e.clientX / window.innerWidth;
+      const mouseY = e.clientY / window.innerHeight;
+
+      shapes.forEach((shape, index) => {
+        const speed = (index + 1) * 0.5;
+        const x = (mouseX - 0.5) * speed * 20;
+        const y = (mouseY - 0.5) * speed * 20;
+
+        shape.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    });
+
+    // Check if demo parameter is in URL (for future demo implementation)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("demo") === "true") {
+      // You can add demo-specific initialization here later
+      console.log("Demo mode activated");
+    }
+  });
+
+  // Utility function to remove all demo modals (cleanup)
+  function removeAllModals() {
+    document.querySelectorAll(".demo-modal").forEach((modal) => modal.remove());
+  }
+
+  // Close modal when pressing Escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      removeAllModals();
+    }
+  });
+</script>
+{% endblock %}

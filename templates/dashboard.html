@@ -1,0 +1,3085 @@
+{% extends "base.html" %} {% block title %}Dashboard - HangSpace{% endblock %}
+{% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-content">
+    <div class="logo-container">
+      <svg
+        class="logo"
+        width="120"
+        height="120"
+        viewBox="0 0 120 120"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00f3ff" />
+            <stop offset="100%" stop-color="#0066ff" />
+          </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- Background Circle -->
+        <circle
+          cx="60"
+          cy="60"
+          r="55"
+          fill="url(#logoGradient)"
+          opacity="0.1"
+        />
+
+        <!-- Main Logo Shape - Abstract H with chat bubbles -->
+        <path
+          d="M40,30 L40,50 L30,50 L30,70 L40,70 L40,90 L50,90 L50,70 L70,70 L70,90 L80,90 L80,70 L90,70 L90,50 L80,50 L80,30 L70,30 L70,50 L50,50 L50,30 Z"
+          fill="url(#logoGradient)"
+          filter="url(#glow)"
+        />
+
+        <!-- Chat bubble elements -->
+        <circle cx="45" cy="45" r="8" fill="#00f3ff" opacity="0.8">
+          <animate
+            attributeName="r"
+            values="8;10;8"
+            dur="2s"
+            repeatCount="indefinite"
+          />
+        </circle>
+        <circle cx="65" cy="65" r="6" fill="#0066ff" opacity="0.8">
+          <animate
+            attributeName="r"
+            values="6;8;6"
+            dur="1.5s"
+            repeatCount="indefinite"
+            begin="0.5s"
+          />
+        </circle>
+        <circle cx="75" cy="45" r="5" fill="#00f3ff" opacity="0.6">
+          <animate
+            attributeName="r"
+            values="5;7;5"
+            dur="1.8s"
+            repeatCount="indefinite"
+            begin="1s"
+          />
+        </circle>
+      </svg>
+    </div>
+
+    <div class="loading-text">
+      <h1>HangSpace</h1>
+      <p>Your social space to connect, chat, and hang out with friends</p>
+    </div>
+
+    <div class="loading-progress">
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="user-header">
+      {% if user.avatar_url %}
+      <img
+        src="{{ user.avatar_url }}"
+        alt="{{ user.display_name }}"
+        class="user-avatar-img"
+      />
+      {% else %}
+      <div class="user-avatar">{{ user.display_name[0]|upper }}</div>
+      {% endif %}
+      <div>
+        <div style="font-weight: 600; color: var(--text-dark)">
+          {{ user.display_name }}
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-light)">
+          @{{ user.username }}
+        </div>
+        <div style="font-size: 0.7rem; color: var(--success)">
+          <span class="online-indicator"></span> Online
+        </div>
+      </div>
+    </div>
+
+    <!-- Enhanced Notification Bell -->
+    <div class="notification-header">
+      <div class="notification-bell-container">
+        <div
+          class="notification-bell"
+          id="notificationBell"
+          onclick="toggleNotificationDropdown(event)"
+        >
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="notificationBadge">0</span>
+        </div>
+
+        <!-- Notification Dropdown -->
+        <div class="notification-dropdown" id="notificationDropdown">
+          <div class="notification-header">
+            <h4>Notifications</h4>
+            <div class="notification-actions">
+              <button
+                class="btn btn-sm btn-clear"
+                onclick="markAllNotificationsAsRead()"
+              >
+                Mark all read
+              </button>
+              <button
+                class="btn btn-sm btn-clear"
+                onclick="clearAllNotifications()"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+
+          <div class="notification-list" id="notificationList">
+            <div class="notification-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              Loading notifications...
+            </div>
+          </div>
+
+          <div class="notification-footer">
+            <a href="#" onclick="loadMoreNotifications()">Load more</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat/Group Toggle -->
+    <div class="view-toggle">
+      <button
+        class="toggle-btn active"
+        id="chatsToggle"
+        onclick="toggleView('chats')"
+      >
+        <i class="fas fa-comments"></i> Chats
+      </button>
+      <button
+        class="toggle-btn"
+        id="groupsToggle"
+        onclick="toggleView('groups')"
+      >
+        <i class="fas fa-users"></i> Groups
+      </button>
+    </div>
+
+    <!-- Friends Section (Always Visible) -->
+    <div class="section-title">
+      <span>Friends</span>
+      <span style="font-size: 0.8rem; color: var(--text-light)"
+        >{{ friends|length }}</span
+      >
+    </div>
+
+    <div id="friendsList">
+      {% if friends %} {% for friend in friends %}
+      <div class="friend-item" onclick="openChat('{{ friend._id }}')">
+        {% if friend.avatar_url %}
+        <img
+          src="{{ friend.avatar_url }}"
+          alt="{{ friend.display_name }}"
+          class="friend-avatar-img"
+        />
+        {% else %}
+        <div class="friend-avatar">{{ friend.display_name[0]|upper }}</div>
+        {% endif %}
+        <div class="friend-info">
+          <div class="friend-name">{{ friend.display_name }}</div>
+          <div class="friend-status">
+            {% if friend.is_online %}
+            <span class="online-indicator"></span> Online - {{ friend.status }}
+            {% else %}
+            <span style="color: var(--text-light)">Offline</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="friend-actions">
+          <button
+            class="friend-action-btn friend-message-btn"
+            title="Send Message"
+            onclick="event.stopPropagation(); openChat('{{ friend._id }}')"
+          >
+            <i class="fas fa-comment"></i>
+          </button>
+          <button
+            class="friend-action-btn friend-profile-btn"
+            title="View Profile"
+            onclick="event.stopPropagation(); viewUserProfile('{{ friend._id }}')"
+          >
+            <i class="fas fa-user"></i>
+          </button>
+          <button
+            class="friend-action-btn friend-remove-btn"
+            title="Remove Friend"
+            onclick="event.stopPropagation(); removeFriend('{{ friend._id }}')"
+          >
+            <i class="fas fa-user-times"></i>
+          </button>
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>No friends yet</p>
+        <p style="font-size: 0.9rem">Search for users to add friends</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Chats Section (Visible when chats toggle is active) -->
+    <div id="chatsSection">
+      <div class="section-title">
+        <span>Chats</span>
+        <span style="font-size: 0.8rem; color: var(--text-light"
+          >{{ (chats|selectattr('is_group', 'equalto', false)|list)|length
+          }}</span
+        >
+      </div>
+
+      <div id="chatsList">
+        {% set individual_chats = chats | selectattr("is_group", "equalto",
+        false) | list %} {% if individual_chats %} {% for chat in
+        individual_chats %}
+        <div class="chat-item" onclick="openChat('{{ chat._id }}')">
+          {% if chat.other_user_avatar %}
+          <img
+            src="{{ chat.other_user_avatar }}"
+            alt="{{ chat.name }}"
+            class="chat-avatar-img"
+          />
+          {% else %}
+          <div class="chat-avatar">{{ chat.name[0]|upper }}</div>
+          {% endif %}
+          <div class="chat-info">
+            <div class="chat-name">{{ chat.name }}</div>
+            <div class="chat-last-message">
+              {% if chat.last_message %} {{
+              chat.last_message.content|truncate(30) }} {% else %} No messages
+              yet {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="empty-state">
+          <i class="fas fa-comments"></i>
+          <p>No chats yet</p>
+          <p style="font-size: 0.9rem">Start a conversation with a friend</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Groups Section (Visible when groups toggle is active) -->
+    <div id="groupsSection" style="display: none">
+      <div class="section-title">
+        <span>Groups</span>
+        <span style="font-size: 0.8rem; color: var(--text-light"
+          >{{ (chats|selectattr('is_group', 'equalto', true)|list)|length
+          }}</span
+        >
+      </div>
+
+      <div id="groupsList">
+        {% set group_chats = chats | selectattr("is_group", "equalto", true) |
+        list %} {% if group_chats %} {% for group in group_chats %}
+        <div class="group-item" onclick="openGroupDetails('{{ group._id }}')">
+          <div class="group-avatar">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="group-info">
+            <div class="group-name">{{ group.name }}</div>
+            <div class="group-members">
+              {{ group.participants|length }} members
+            </div>
+            <div class="group-last-message">
+              {% if group.last_message %} {{
+              group.last_message.content|truncate(25) }} {% else %} No messages
+              yet {% endif %}
+            </div>
+          </div>
+          <div class="group-actions">
+            <button
+              class="group-action-btn group-open-btn"
+              title="Open Group"
+              onclick="event.stopPropagation(); openChat('{{ group._id }}')"
+            >
+              <i class="fas fa-comment"></i>
+            </button>
+            <button
+              class="group-action-btn group-delete-btn"
+              title="Delete Group"
+              onclick="event.stopPropagation(); deleteGroup('{{ group._id }}')"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p>No groups yet</p>
+          <p style="font-size: 0.9rem">Create your first group chat</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="section-header">
+      <h1 style="color: var(--text-dark)">Welcome to HangSpace</h1>
+      <div style="display: flex; gap: 12px">
+        <!-- Profile Button -->
+        <a
+          href="{{ url_for('my_profile') }}"
+          class="btn"
+          style="background: var(--primary-blue); color: white"
+          title="My Profile"
+        >
+          <i class="fas fa-user"></i> My Profile
+        </a>
+        <!-- Logout Button -->
+        <a
+          href="{{ url_for('logout') }}"
+          class="btn"
+          style="background: #f7fafc; color: var(--text-dark)"
+        >
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </div>
+    </div>
+
+    <div class="tab-container">
+      <div class="tab active" onclick="showTab('overview')">Overview</div>
+      <div class="tab" onclick="showTab('friends')">Friend Requests</div>
+      <div class="tab" onclick="showTab('groups')">Create Group</div>
+      <!-- Search Icon with Label -->
+      <div class="search-header">
+        <div
+          class="search-icon-nav"
+          onclick="navigateToSearch()"
+          title="Search Users"
+        >
+          <i class="fas fa-search"></i>
+          <span class="search-label">Search Users</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="overviewTab">
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+        "
+      >
+        <div class="card">
+          <h3 style="color: var(--text-dark); margin-bottom: 16px">
+            <i
+              class="fas fa-user-friends"
+              style="color: var(--primary-blue)"
+            ></i>
+            Friends
+          </h3>
+          <p style="color: var(--text-light); margin-bottom: 16px">
+            You have {{ friends|length }} friend(s)
+          </p>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btn-primary" onclick="showTab('friends')">
+              Manage Friends
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--text-dark); margin-bottom: 16px">
+            <i class="fas fa-comments" style="color: var(--primary-blue)"></i>
+            Chats
+          </h3>
+          <p style="color: var(--text-light); margin-bottom: 16px">
+            You have {{ (chats|selectattr('is_group', 'equalto',
+            false)|list)|length }} active chat(s)
+          </p>
+          <button class="btn btn-primary" onclick="startNewChat()">
+            Start New Chat
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--text-dark); margin-bottom: 16px">
+            <i class="fas fa-users" style="color: var(--primary-blue)"></i>
+            Groups
+          </h3>
+          <p style="color: var(--text-light); margin-bottom: 16px">
+            You have {{ (chats|selectattr('is_group', 'equalto',
+            true)|list)|length }} group(s)
+          </p>
+          <button class="btn btn-primary" onclick="showTab('groups')">
+            Create Group
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 style="color: var(--text-dark); margin-bottom: 16px">
+            <i class="fas fa-bell" style="color: var(--primary-blue)"></i>
+            Notifications
+          </h3>
+          <p style="color: var(--text-light); margin-bottom: 16px">
+            {% set pending_count = pending_requests|length %} You have {{
+            pending_count }} pending friend request(s)
+          </p>
+          {% if pending_count > 0 %}
+          <button class="btn btn-primary" onclick="showTab('friends')">
+            View Requests
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div id="friendsTab" style="display: none">
+      <div class="card">
+        <h3 style="color: var(--text-dark); margin-bottom: 20px">
+          Pending Friend Requests
+        </h3>
+
+        {% if pending_requests %} {% for request in pending_requests %}
+        <div class="friend-item">
+          {% if request.from_user.avatar_url %}
+          <img
+            src="{{ request.from_user.avatar_url }}"
+            alt="{{ request.from_user.display_name }}"
+            class="friend-avatar-img"
+          />
+          {% else %}
+          <div class="friend-avatar">
+            {{ request.from_user.display_name[0]|upper }}
+          </div>
+          {% endif %}
+          <div class="friend-info">
+            <div class="friend-name">{{ request.from_user.display_name }}</div>
+            <div class="friend-status">@{{ request.from_user.username }}</div>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button
+              class="btn btn-primary"
+              onclick="respondToRequest('{{ request._id }}', 'accept')"
+            >
+              Accept
+            </button>
+            <button
+              class="btn"
+              style="background: #f7fafc; color: var(--text-dark)"
+              onclick="respondToRequest('{{ request._id }}', 'decline')"
+            >
+              Decline
+            </button>
+          </div>
+        </div>
+        {% endfor %} {% else %}
+        <div class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <p>No pending requests</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="groupsTab" style="display: none">
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
+          <h3 style="color: var(--text-dark); margin: 0">Create Group Chat</h3>
+        </div>
+
+        <div style="margin-bottom: 20px">
+          <p style="color: var(--text-light); margin-bottom: 16px">
+            Create a new group chat with your friends
+          </p>
+          <button class="btn btn-primary" onclick="createGroupChat()">
+            <i class="fas fa-plus"></i> Create New Group
+          </button>
+        </div>
+
+        <!-- Group Management Section -->
+        <div style="margin-top: 30px">
+          <h4 style="color: var(--text-dark); margin-bottom: 16px">
+            Your Groups
+          </h4>
+          {% set group_chats = chats | selectattr("is_group", "equalto", true) |
+          list %} {% if group_chats %}
+          <div class="groups-management-list">
+            {% for group in group_chats %}
+            <div class="group-management-item">
+              <div class="group-management-info">
+                <div class="group-management-name">{{ group.name }}</div>
+                <div class="group-management-members">
+                  {{ group.participants|length }} members
+                </div>
+              </div>
+              <div class="group-management-actions">
+                <button
+                  class="btn btn-sm"
+                  onclick="openGroupDetails('{{ group._id }}')"
+                >
+                  <i class="fas fa-info-circle"></i> Details
+                </button>
+                <button
+                  class="btn btn-sm"
+                  onclick="openChat('{{ group._id }}')"
+                >
+                  <i class="fas fa-comment"></i> Open
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  onclick="deleteGroup('{{ group._id }}')"
+                >
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No groups yet</p>
+            <p style="font-size: 0.9rem">
+              Create your first group chat to get started
+            </p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Group Details Modal -->
+<div id="groupDetailsModal" class="modal-overlay" style="display: none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="groupDetailsTitle">Group Details</h3>
+      <button class="btn btn-close" onclick="closeGroupDetails()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="groupParticipantsList">
+        <!-- Group participants will be loaded here -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeGroupDetails()">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  // Real-time Notification System
+  class NotificationManager {
+    constructor() {
+      this.isDropdownOpen = false;
+      this.notifications = [];
+      this.unreadCount = 0;
+      this.activeSenders = [];
+      this.init();
+    }
+
+    init() {
+      this.loadNotifications();
+      this.setupSocketListeners();
+      this.setupEventListeners();
+      this.startPeriodicUpdates();
+    }
+
+    setupSocketListeners() {
+      // Listen for real-time notification updates
+      if (typeof io !== 'undefined') {
+        const socket = io();
+
+        socket.on('notification_updated', (data) => {
+          console.log('📢 Real-time notification received:', data);
+          this.handleRealTimeNotification(data);
+        });
+
+        socket.on('notification_badge_updated', (data) => {
+          console.log('🔄 Badge count updated:', data);
+          this.unreadCount = data.unread_count || 0;
+          this.updateBadgeCount();
+        });
+
+        socket.on('new_notification', (data) => {
+          console.log('🆕 New notification:', data);
+          this.handleNewNotification(data);
+        });
+
+        socket.on('notifications_cleared', (data) => {
+          console.log('🗑️ Notifications cleared:', data);
+          this.handleNotificationsCleared(data);
+        });
+
+        socket.on('connect', () => {
+          console.log('✅ Connected to notification server');
+          socket.emit('request_notifications');
+        });
+
+        // Store socket instance for later use
+        this.socket = socket;
+      }
+    }
+
+    setupEventListeners() {
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.notification-bell-container')) {
+          this.closeDropdown();
+        }
+      });
+
+      // Close with Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.isDropdownOpen) {
+          this.closeDropdown();
+        }
+      });
+    }
+
+    startPeriodicUpdates() {
+      // Update notifications every 30 seconds when dropdown is open
+      setInterval(() => {
+        if (this.isDropdownOpen) {
+          this.loadNotifications(false);
+        }
+      }, 30000);
+
+      // Update badge count every minute
+      setInterval(() => {
+        this.updateBadgeCount();
+      }, 60000);
+    }
+
+    async loadNotifications(showLoading = true) {
+      try {
+        if (showLoading) {
+          this.showLoadingState();
+        }
+
+        const response = await fetch('/api/notifications?limit=20&unread_only=false');
+        const data = await response.json();
+
+        if (data.notifications) {
+          this.notifications = data.notifications;
+          this.unreadCount = data.unread_count || 0;
+          this.renderNotifications();
+          this.updateBadgeCount();
+        }
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        this.showErrorState('Failed to load notifications');
+      }
+    }
+
+    async loadMoreNotifications() {
+      try {
+        const currentCount = this.notifications.length;
+        const response = await fetch(`/api/notifications?limit=10&skip=${currentCount}`);
+        const data = await response.json();
+
+        if (data.notifications && data.notifications.length > 0) {
+          this.notifications = [...this.notifications, ...data.notifications];
+          this.renderNotifications();
+          showNotification('Loaded more notifications', 'success');
+        } else {
+          showNotification('No more notifications to load', 'info');
+        }
+      } catch (error) {
+        console.error('Error loading more notifications:', error);
+        showNotification('Error loading more notifications', 'error');
+      }
+    }
+
+    renderNotifications() {
+      const notificationList = document.getElementById('notificationList');
+
+      if (!this.notifications || this.notifications.length === 0) {
+        notificationList.innerHTML = this.getEmptyState();
+        return;
+      }
+
+      notificationList.innerHTML = this.notifications.map(notification =>
+        this.renderNotificationItem(notification)
+      ).join('');
+    }
+
+    renderNotificationItem(notification) {
+      const messageCount = notification.data?.message_count || 1;
+      const isConsolidated = messageCount > 1;
+      const isUnread = !notification.is_read;
+
+      return `
+        <div class="notification-item ${isUnread ? 'unread' : ''} ${isConsolidated ? 'consolidated' : ''}"
+             onclick="notificationManager.handleNotificationClick('${notification._id}', '${notification.type}', ${JSON.stringify(notification.data || {}).replace(/'/g, "\\'")})">
+          <div class="notification-content">
+            <div class="notification-icon">
+              <i class="fas fa-${this.getNotificationIcon(notification.type, notification.data)}"></i>
+              ${isConsolidated ? `<span class="message-count-badge">${messageCount}</span>` : ''}
+            </div>
+            <div class="notification-text">
+              <div class="notification-message">${this.formatNotificationMessage(notification)}</div>
+              ${isConsolidated ? `<div class="notification-count">${messageCount} unread messages</div>` : ''}
+              <div class="notification-time">${this.formatTime(notification.created_at)}</div>
+              ${isUnread ? `
+              <div class="notification-actions">
+                <button class="btn btn-sm btn-clear" onclick="event.stopPropagation(); notificationManager.markAsRead('${notification._id}')">
+                  Mark as read
+                </button>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    formatNotificationMessage(notification) {
+      switch (notification.type) {
+        case 'new_message':
+          const senderName = notification.data?.sender_name || 'Someone';
+          const messagePreview = notification.data?.latest_content || notification.data?.content || 'sent you a message';
+          return `${senderName}: ${this.truncateMessage(messagePreview, 60)}`;
+
+        case 'friend_request':
+          return `${notification.data?.from_user_name || 'Someone'} sent you a friend request`;
+
+        case 'friend_request_accepted':
+          return `${notification.data?.user_name || 'Someone'} accepted your friend request`;
+
+        case 'message_read':
+          return `${notification.data?.reader_name || 'Someone'} read your message`;
+
+        case 'added_to_group':
+          return `${notification.data?.added_by_name || 'Someone'} added you to "${notification.data?.group_name || 'a group'}"`;
+
+        case 'removed_from_group':
+          return `${notification.data?.removed_by_name || 'Someone'} removed you from "${notification.data?.group_name || 'a group'}"`;
+
+        case 'user_left_group':
+          return `${notification.data?.user_name || 'Someone'} left "${notification.data?.group_name || 'a group'}"`;
+
+        case 'group_name_updated':
+          return `${notification.data?.updated_by_name || 'Someone'} changed group name to "${notification.data?.new_name || 'new name'}"`;
+
+        default:
+          return notification.message;
+      }
+    }
+
+    truncateMessage(message, length) {
+      if (!message) return 'New message';
+      if (message.length <= length) return message;
+      return message.substring(0, length) + '...';
+    }
+
+    getNotificationIcon(type, data = {}) {
+      const icons = {
+        new_message: data?.message_count > 1 ? 'comments' : 'comment',
+        friend_request: 'user-plus',
+        friend_request_accepted: 'user-check',
+        message_read: 'eye',
+        added_to_group: 'user-plus',
+        removed_from_group: 'user-minus',
+        user_left_group: 'sign-out-alt',
+        group_name_updated: 'edit'
+      };
+      return icons[type] || 'bell';
+    }
+
+    handleNotificationClick(notificationId, type, data) {
+      this.markAsRead(notificationId);
+
+      switch (type) {
+        case 'new_message':
+          if (data.chat_id) {
+            window.location.href = `/chat/${data.chat_id}`;
+          }
+          break;
+
+        case 'friend_request':
+          showTab('friends');
+          break;
+
+        case 'added_to_group':
+        case 'removed_from_group':
+        case 'user_left_group':
+        case 'group_name_updated':
+          if (data.chat_id) {
+            window.location.href = `/chat/${data.chat_id}`;
+          }
+          break;
+      }
+
+      this.closeDropdown();
+    }
+
+    async markAsRead(notificationId) {
+      try {
+        const response = await fetch('/api/notifications/mark-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ notification_id: notificationId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update local state
+          const notificationIndex = this.notifications.findIndex(n => n._id === notificationId);
+          if (notificationIndex !== -1) {
+            this.notifications[notificationIndex].is_read = true;
+          }
+
+          this.unreadCount = Math.max(0, this.unreadCount - 1);
+          this.updateBadgeCount();
+          this.renderNotifications();
+        }
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+        showNotification('Error marking notification as read', 'error');
+      }
+    }
+
+    async markAllNotificationsAsRead() {
+      try {
+        const response = await fetch('/api/notifications/mark-all-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update all notifications to read
+          this.notifications.forEach(notification => {
+            notification.is_read = true;
+          });
+
+          this.unreadCount = 0;
+          this.updateBadgeCount();
+          this.renderNotifications();
+          showNotification('All notifications marked as read', 'success');
+        }
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        showNotification('Error marking all notifications as read', 'error');
+      }
+    }
+
+    async clearAllNotifications() {
+      if (!confirm('Are you sure you want to clear all read notifications?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/notifications/cleanup-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Remove read notifications from local state
+          this.notifications = this.notifications.filter(notification => !notification.is_read);
+          this.renderNotifications();
+          showNotification(`Cleared ${data.deleted_count} read notifications`, 'success');
+        }
+      } catch (error) {
+        console.error('Error clearing notifications:', error);
+        showNotification('Error clearing notifications', 'error');
+      }
+    }
+
+    updateBadgeCount() {
+      const badge = document.getElementById('notificationBadge');
+      const bell = document.getElementById('notificationBell');
+
+      if (this.unreadCount > 0) {
+        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+        badge.style.display = 'flex';
+        bell.classList.add('has-notifications');
+
+        // Add animation for new notifications
+        badge.classList.add('pulse');
+        setTimeout(() => {
+          badge.classList.remove('pulse');
+        }, 1000);
+      } else {
+        badge.style.display = 'none';
+        bell.classList.remove('has-notifications');
+      }
+    }
+
+    handleRealTimeNotification(data) {
+      console.log('📢 Processing real-time notification:', data);
+
+      // Refresh notifications when real-time update received
+      this.loadNotifications(false);
+
+      // Update badge count
+      this.updateBadgeCount();
+
+      // Show subtle notification toast
+      if (data.type === 'new_message' && data.notification) {
+        this.showToastNotification(data.notification);
+      }
+    }
+
+    handleNewNotification(data) {
+      console.log('New notification received:', data);
+      // Add new notification to the top
+      if (data.notification) {
+        this.notifications.unshift(data.notification);
+        this.unreadCount++;
+        this.updateBadgeCount();
+
+        if (this.isDropdownOpen) {
+          this.renderNotifications();
+        }
+
+        this.showToastNotification(data.notification);
+      }
+    }
+
+    handleNotificationsCleared(data) {
+      console.log('Notifications cleared for sender:', data);
+      // Remove notifications from specific sender
+      this.notifications = this.notifications.filter(notification =>
+        !(notification.type === 'new_message' && notification.data?.sender_id === data.sender_id)
+      );
+
+      this.renderNotifications();
+      this.updateBadgeCount();
+    }
+
+    showToastNotification(notification) {
+      // Don't show toast if dropdown is open
+      if (this.isDropdownOpen) return;
+
+      // Create a toast notification
+      const toast = document.createElement('div');
+      toast.className = 'notification-toast';
+      toast.innerHTML = `
+        <div class="toast-content">
+          <i class="fas fa-${this.getNotificationIcon(notification.type, notification.data)}"></i>
+          <span>${this.formatNotificationMessage(notification)}</span>
+          <button class="toast-close" onclick="this.parentElement.parentElement.remove()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(toast);
+
+      // Add show class after a delay for animation
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 100);
+
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          if (toast.parentElement) {
+            toast.remove();
+          }
+        }, 300);
+      }, 5000);
+    }
+
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+      const dropdown = document.getElementById('notificationDropdown');
+
+      if (this.isDropdownOpen) {
+        dropdown.classList.add('show');
+        this.loadNotifications();
+      } else {
+        dropdown.classList.remove('show');
+      }
+    }
+
+    closeDropdown() {
+      this.isDropdownOpen = false;
+      const dropdown = document.getElementById('notificationDropdown');
+      dropdown.classList.remove('show');
+    }
+
+    showLoadingState() {
+      const notificationList = document.getElementById('notificationList');
+      notificationList.innerHTML = `
+        <div class="notification-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          Loading notifications...
+        </div>
+      `;
+    }
+
+    showErrorState(message) {
+      const notificationList = document.getElementById('notificationList');
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>${message}</p>
+          <button class="btn btn-sm btn-clear" onclick="notificationManager.loadNotifications()">
+            Try Again
+          </button>
+        </div>
+      `;
+    }
+
+    getEmptyState() {
+      return `
+        <div class="notification-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications</p>
+          <p style="font-size: 0.8rem;">You're all caught up!</p>
+        </div>
+      `;
+    }
+
+    formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      return date.toLocaleDateString();
+    }
+  }
+
+  // Global functions for HTML onclick handlers
+  function toggleNotificationDropdown(event) {
+    if (event) event.stopPropagation();
+    notificationManager.toggleDropdown();
+  }
+
+  function markAllNotificationsAsRead() {
+    notificationManager.markAllNotificationsAsRead();
+  }
+
+  function clearAllNotifications() {
+    notificationManager.clearAllNotifications();
+  }
+
+  function loadMoreNotifications() {
+    notificationManager.loadMoreNotifications();
+  }
+
+  // Loading Screen Functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const loadingScreen = document.getElementById('loadingScreen');
+
+    // Check if this is the first visit in this session
+    const hasSeenLoading = sessionStorage.getItem('hangspace_loading_seen');
+
+    if (!hasSeenLoading) {
+      // Show loading screen for first login
+      loadingScreen.style.display = 'flex';
+
+      // Mark as seen for this session
+      sessionStorage.setItem('hangspace_loading_seen', 'true');
+
+      // Start loading simulation
+      simulateLoading();
+
+      // Initialize dashboard after loading
+      setTimeout(initializeDashboard, 100);
+    } else {
+      // Skip loading screen for subsequent visits in same session
+      loadingScreen.style.display = 'none';
+      initializeDashboard();
+    }
+  });
+
+  function simulateLoading() {
+    const loadingScreen = document.getElementById('loadingScreen');
+
+    // Simulate various loading tasks
+    const loadingTasks = [
+      'Initializing HangSpace...',
+      'Loading your conversations...',
+      'Connecting with friends...',
+      'Almost ready...'
+    ];
+
+    let currentTask = 0;
+
+    const taskInterval = setInterval(() => {
+      if (currentTask < loadingTasks.length) {
+        updateLoadingText(loadingTasks[currentTask]);
+        currentTask++;
+      } else {
+        clearInterval(taskInterval);
+        completeLoading();
+      }
+    }, 800);
+  }
+
+  function updateLoadingText(text) {
+    const loadingText = document.querySelector('.loading-text p');
+    if (loadingText) {
+      loadingText.style.opacity = '0';
+      setTimeout(() => {
+        loadingText.textContent = text;
+        loadingText.style.opacity = '1';
+      }, 200);
+    }
+  }
+
+  function completeLoading() {
+    const loadingScreen = document.getElementById('loadingScreen');
+
+    // Add fade-out class to loading screen
+    loadingScreen.classList.add('fade-out');
+
+    // Remove loading screen after transition
+    setTimeout(() => {
+      loadingScreen.style.display = 'none';
+      loadingScreen.classList.remove('fade-out');
+    }, 500);
+  }
+
+  function initializeDashboard() {
+    // Initialize notification manager
+    window.notificationManager = new NotificationManager();
+
+    // Initialize dashboard functionality
+    loadNotifications();
+    getActiveMessageSenders();
+
+    // Set up periodic updates
+    setInterval(loadNotifications, 30000);
+    setInterval(getActiveMessageSenders, 45000);
+
+    console.log('HangSpace dashboard fully loaded!');
+  }
+
+  // View Toggle Functionality
+  function toggleView(viewType) {
+    const chatsToggle = document.getElementById('chatsToggle');
+    const groupsToggle = document.getElementById('groupsToggle');
+    const chatsSection = document.getElementById('chatsSection');
+    const groupsSection = document.getElementById('groupsSection');
+
+    if (viewType === 'chats') {
+      chatsToggle.classList.add('active');
+      groupsToggle.classList.remove('active');
+      chatsSection.style.display = 'block';
+      groupsSection.style.display = 'none';
+    } else {
+      chatsToggle.classList.remove('active');
+      groupsToggle.classList.add('active');
+      chatsSection.style.display = 'none';
+      groupsSection.style.display = 'block';
+    }
+  }
+
+  // Tab Management
+  function showTab(tabName) {
+    // Hide all tabs
+    document.getElementById("overviewTab").style.display = "none";
+    document.getElementById("friendsTab").style.display = "none";
+    document.getElementById("groupsTab").style.display = "none";
+
+    // Remove active class from all tabs
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.classList.remove("active");
+    });
+
+    // Show selected tab and set active
+    document.getElementById(tabName + "Tab").style.display = "block";
+    event.target.classList.add("active");
+  }
+
+  // Navigation Functions
+  function openChat(chatId) {
+    window.location.href = "/chat/" + chatId;
+  }
+
+  function viewUserProfile(userId) {
+    window.location.href = `/user/${userId}`;
+  }
+
+  function startNewChat() {
+    showNewChatModal();
+  }
+
+  // Group Management Functions
+  function openGroupDetails(groupId) {
+    console.log("Opening group details for:", groupId);
+
+    // Show loading
+    showNotification("Loading group details...", "info");
+
+    fetch("/api/get-group-participants", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: groupId
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Group participants response:", data);
+      if (data.success) {
+        displayGroupParticipantsModal(groupId, data.participants);
+        showNotification("Group details loaded", "success");
+      } else {
+        showNotification("Error loading group details: " + (data.error || "Unknown error"), "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error loading group details:", error);
+      showNotification("Error loading group details: " + error.message, "error");
+    });
+  }
+
+  function displayGroupParticipantsModal(groupId, participants) {
+    const modal = document.getElementById('groupDetailsModal');
+    const title = document.getElementById('groupDetailsTitle');
+    const participantsList = document.getElementById('groupParticipantsList');
+
+    // Find group name from the current page data
+    const groups = {{ chats|selectattr('is_group', 'equalto', true)|list|tojson|safe }};
+    const group = groups.find(g => g._id === groupId);
+    const groupName = group ? group.name : 'Group';
+
+    title.textContent = `${groupName} - Participants (${participants ? participants.length : 0})`;
+
+    // Generate participants list
+    if (participants && participants.length > 0) {
+      participantsList.innerHTML = participants.map(participant => `
+        <div class="group-participant-item" onclick="viewUserProfile('${participant._id}')">
+          <div class="participant-avatar">${participant.display_name[0].toUpperCase()}</div>
+          <div class="participant-info">
+            <div class="participant-name">${participant.display_name}</div>
+            <div class="participant-username">@${participant.username}</div>
+            <div class="participant-status">
+              <span class="status-indicator ${participant.is_online ? 'online' : 'offline'}"></span>
+              ${participant.is_online ? 'Online' : 'Offline'}
+              ${participant.status_message ? ` - ${participant.status_message}` : ''}
+            </div>
+          </div>
+          <div class="participant-action">
+            <button class="btn btn-sm" onclick="event.stopPropagation(); viewUserProfile('${participant._id}')" title="View Profile">
+              <i class="fas fa-external-link-alt"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      participantsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p>No participants found</p>
+          <p style="font-size: 0.9rem">This group doesn't have any participants</p>
+        </div>
+      `;
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  function closeGroupDetails() {
+    const modal = document.getElementById('groupDetailsModal');
+    modal.style.display = 'none';
+  }
+
+  function deleteGroup(groupId) {
+    if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
+      return;
+    }
+
+    showNotification("Deleting group...", "info");
+
+    fetch("/api/delete-group", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: groupId
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification("Group deleted successfully!", "success");
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      } else {
+        showNotification("Error deleting group: " + data.error, "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error deleting group:", error);
+      showNotification("Error deleting group", "error");
+    });
+  }
+
+  // Friend Management Functions
+  function removeFriend(friendId) {
+    if (confirm('Are you sure you want to remove this friend?')) {
+      fetch("/api/remove-friend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          friend_id: friendId,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            showNotification("Friend removed successfully!", "success");
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          } else {
+            showNotification("Error: " + data.error, "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error removing friend:", error);
+          showNotification("Error removing friend", "error");
+        });
+    }
+  }
+
+  function respondToRequest(requestId, action) {
+    console.log("Responding to request:", requestId, "Action:", action);
+
+    fetch("/api/respond-friend-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        request_id: requestId,
+        action: action,
+      }),
+    })
+      .then((response) => {
+        console.log("Response status:", response.status, response.statusText);
+        if (!response.ok) {
+          return response.text().then((text) => {
+            console.error("Error response text:", text);
+            try {
+              const errorData = JSON.parse(text);
+              throw new Error(
+                errorData.error ||
+                  `HTTP ${response.status}: ${response.statusText}`
+              );
+            } catch (e) {
+              throw new Error(
+                `HTTP ${response.status}: ${response.statusText} - ${text}`
+              );
+            }
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Success response:", data);
+        if (data.success) {
+          showNotification(
+            `Friend request ${action}ed successfully!`,
+            "success"
+          );
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        } else {
+          showNotification(
+            "Error: " + (data.error || "Unknown error"),
+            "error"
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Full error:", error);
+        showNotification("Error processing request: " + error.message, "error");
+      });
+  }
+
+  // Chat Creation Functions
+  function showNewChatModal() {
+    const friends = {{ friends|tojson|safe }};
+
+    if (!friends || friends.length === 0) {
+      showNotification("You need to add friends first to start a chat", "warning");
+      return;
+    }
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    modal.innerHTML = `
+      <div class="modal-content" style="
+        background: var(--secondary-dark);
+        border: 1px solid var(--primary-blue);
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="color: var(--text-dark); margin: 0;">Start New Chat</h3>
+          <button class="btn" onclick="this.closest('.modal-overlay').remove()" style="background: transparent; color: var(--text-light); padding: 0.5rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <p style="color: var(--text-light); margin-bottom: 1.5rem;">
+          Select a friend to start chatting with
+        </p>
+
+        <div id="newChatFriendList" style="max-height: 400px; overflow-y: auto;">
+          ${generateNewChatFriendList(friends)}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+          <button class="btn" onclick="this.closest('.modal-overlay').remove()" style="background: var(--tertiary-dark); color: var(--text-dark);">
+            Cancel
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  function generateNewChatFriendList(friends) {
+    if (!friends || friends.length === 0) {
+      return `
+        <div class="empty-state" style="padding: 2rem;">
+          <i class="fas fa-users"></i>
+          <p>No friends available</p>
+          <p style="font-size: 0.9rem">Add friends to start chatting</p>
+        </div>
+      `;
+    }
+
+    return friends.map(friend => `
+      <div class="new-chat-friend-item" style="
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: var(--tertiary-dark);
+        cursor: pointer;
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+      " onclick="startChatWithFriend('${friend._id}')">
+        <div class="friend-avatar" style="width: 3rem; height: 3rem; font-size: 1.2rem;">
+          ${friend.display_name[0].toUpperCase()}
+        </div>
+        <div style="flex: 1; margin-left: 1rem;">
+          <div style="font-weight: 600; color: var(--text-dark); font-size: 1rem;">
+            ${friend.display_name}
+          </div>
+          <div style="color: var(--text-light); font-size: 0.85rem; margin-bottom: 0.25rem;">
+            @${friend.username}
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="search-status-${friend.is_online ? 'online' : 'offline'}" style="font-size: 0.75rem;">
+              <i class="fas fa-circle"></i>
+              ${friend.is_online ? 'Online' : 'Offline'}
+            </span>
+            ${friend.status ? `<span style="color: var(--text-light); font-size: 0.75rem;">• ${friend.status}</span>` : ''}
+          </div>
+        </div>
+        <div style="color: var(--primary-blue); font-size: 1.25rem;">
+          <i class="fas fa-arrow-right"></i>
+        </div>
+
+        <!-- Hover effect overlay -->
+        <div style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0, 102, 255, 0.1), transparent); transition: left 0.5s ease;"></div>
+      </div>
+    `).join('');
+  }
+
+  function startChatWithFriend(friendId) {
+    // Close the modal first
+    document.querySelector('.modal-overlay').remove();
+
+    // Show loading notification
+    showNotification("Starting chat...", "info");
+
+    // Send request to create or get existing chat
+    fetch("/start-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        friend_id: friendId
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification("Chat started successfully!", "success");
+        // Redirect to the chat
+        setTimeout(() => {
+          window.location.href = "/chat/" + data.chat_id;
+        }, 1000);
+      } else {
+        showNotification("Error starting chat: " + data.error, "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error starting chat:", error);
+      showNotification("Error starting chat", "error");
+    });
+  }
+
+  // Group Creation Functions
+  function createGroupChat() {
+    // Create modal for group creation
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    modal.innerHTML = `
+      <div class="modal-content" style="
+        background: var(--secondary-dark);
+        border: 1px solid var(--primary-blue);
+        border-radius: 1rem;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="color: var(--text-dark); margin: 0;">Create Group Chat</h3>
+          <button class="btn" onclick="this.closest('.modal-overlay').remove()" style="background: transparent; color: var(--text-light); padding: 0.5rem;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; color: var(--text-dark); margin-bottom: 0.5rem; font-weight: 600;">
+            Group Name
+          </label>
+          <input
+            type="text"
+            id="groupNameInput"
+            placeholder="Enter group name..."
+            style="
+              width: 100%;
+              padding: 0.75rem;
+              border: 1px solid var(--border-light);
+              border-radius: 0.5rem;
+              background: var(--tertiary-dark);
+              color: var(--text-dark);
+              font-size: 1rem;
+            "
+          >
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; color: var(--text-dark); margin-bottom: 0.5rem; font-weight: 600;">
+            Select Friends to Add
+          </label>
+          <div id="friendSelectionList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 0.5rem; padding: 0.5rem;">
+            ${generateFriendSelectionList()}
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button class="btn" onclick="this.closest('.modal-overlay').remove()" style="background: var(--tertiary-dark); color: var(--text-dark);">
+            Cancel
+          </button>
+          <button class="btn btn-primary" onclick="createGroupWithSelectedFriends()">
+            Create Group
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  function generateFriendSelectionList() {
+    const friends = {{ friends|tojson|safe }};
+
+    if (!friends || friends.length === 0) {
+      return `
+        <div class="empty-state" style="padding: 2rem;">
+          <i class="fas fa-users"></i>
+          <p>No friends available</p>
+          <p style="font-size: 0.9rem">Add friends to create group chats</p>
+        </div>
+      `;
+    }
+
+    let friendListHTML = '';
+    friends.forEach((friend, index) => {
+      friendListHTML += `
+        <div class="friend-selection-item" data-friend-id="${friend._id}" style="
+          display: flex;
+          align-items: center;
+          padding: 0.75rem;
+          border: 1px solid var(--border-light);
+          border-radius: 0.5rem;
+          margin-bottom: 0.5rem;
+          background: var(--tertiary-dark);
+          cursor: pointer;
+          transition: var(--transition-smooth);
+        " onclick="toggleFriendSelection('${friend._id}', this)">
+          <div class="friend-avatar" style="width: 2rem; height: 2rem; font-size: 0.8rem;">
+            ${friend.display_name[0].toUpperCase()}
+          </div>
+          <div style="flex: 1; margin-left: 0.75rem;">
+            <div style="font-weight: 600; color: var(--text-dark); font-size: 0.9rem;">
+              ${friend.display_name}
+            </div>
+            <div style="color: var(--text-light); font-size: 0.8rem;">
+              @${friend.username}
+            </div>
+          </div>
+          <div class="selection-checkbox" style="
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid var(--border-light);
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+          ">
+            <i class="fas fa-check" style="color: var(--primary-blue); font-size: 0.7rem; display: none;"></i>
+          </div>
+        </div>
+      `;
+    });
+
+    return friendListHTML;
+  }
+
+  function toggleFriendSelection(friendId, element) {
+    const checkbox = element.querySelector('.selection-checkbox');
+    const icon = checkbox.querySelector('i');
+
+    if (icon.style.display === 'none') {
+      icon.style.display = 'block';
+      checkbox.style.borderColor = 'var(--primary-blue)';
+      checkbox.style.background = 'rgba(0, 243, 255, 0.1)';
+      element.style.borderColor = 'var(--primary-blue)';
+      element.dataset.selected = 'true';
+    } else {
+      icon.style.display = 'none';
+      checkbox.style.borderColor = 'var(--border-light)';
+      checkbox.style.background = 'transparent';
+      element.style.borderColor = 'var(--border-light)';
+      element.dataset.selected = 'false';
+    }
+  }
+
+  function createGroupWithSelectedFriends() {
+    const groupNameInput = document.getElementById('groupNameInput');
+    const groupName = groupNameInput.value.trim();
+
+    if (!groupName) {
+      showNotification("Please enter a group name", "warning");
+      return;
+    }
+
+    if (groupName.length < 2) {
+      showNotification("Group name must be at least 2 characters long", "warning");
+      return;
+    }
+
+    const selectedFriends = [];
+    const selectedItems = document.querySelectorAll('.friend-selection-item[data-selected="true"]');
+
+    selectedItems.forEach(item => {
+      const friendId = item.getAttribute('data-friend-id');
+      selectedFriends.push(friendId);
+    });
+
+    if (selectedFriends.length === 0) {
+      showNotification("Please select at least one friend for the group", "warning");
+      return;
+    }
+
+    // Close the modal
+    document.querySelector('.modal-overlay').remove();
+
+    // Show loading notification
+    showNotification("Creating group chat...", "info");
+
+    // Send request to create group
+    fetch("/api/create-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        participants: selectedFriends,
+        name: groupName,
+        is_group: true
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.chat_id) {
+        showNotification("Group chat created successfully!", "success");
+        // Redirect to the new group chat
+        setTimeout(() => {
+          window.location.href = "/chat/" + data.chat_id;
+        }, 1500);
+      } else {
+        showNotification("Error creating group chat", "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error creating group chat:", error);
+      showNotification("Error creating group chat", "error");
+    });
+  }
+
+  // Friend Request Functions
+  function sendFriendRequest(userId) {
+    fetch("/api/send-friend-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Friend request sent!", "success");
+        } else {
+          showNotification("Error: " + data.error, "error");
+        }
+      });
+  }
+
+  // Legacy notification functions for compatibility
+  function loadNotifications() {
+    if (window.notificationManager) {
+      window.notificationManager.loadNotifications();
+    }
+  }
+
+  function getActiveMessageSenders() {
+    fetch('/api/notifications/active-senders')
+      .then(response => response.json())
+      .then(data => {
+        // This is now handled by the unified notification system
+      })
+      .catch(error => {
+        console.error('Error getting active senders:', error);
+      });
+  }
+
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString();
+  }
+
+  // Search functionality
+  document
+    .getElementById("searchInput")
+    ?.addEventListener("input", function (e) {
+      const query = e.target.value.trim();
+      const searchResults = document.getElementById("searchResults");
+
+      if (query.length < 2) {
+        searchResults.style.display = "none";
+        return;
+      }
+
+      // Simulate search results - replace with actual API call
+      simulateSearchResults(query, searchResults);
+    });
+
+  function simulateSearchResults(query, container) {
+    // This is a simulation - replace with actual API call
+    const mockResults = [
+      {
+        _id: "1",
+        display_name: "Birthan",
+        username: "johanna_johanna",
+        status: "Online",
+        is_online: true,
+        relationship: "none",
+      },
+      {
+        _id: "2",
+        display_name: "John X. [Burns]",
+        username: "johanna_kuhnley",
+        status: "Burnian (Yuan)",
+        is_online: false,
+        relationship: "pending",
+      },
+      {
+        _id: "3",
+        display_name: "Happy Fiona",
+        username: "happy_fiona",
+        status: "Available for chat",
+        is_online: true,
+        relationship: "friends",
+      },
+    ];
+
+    const filteredResults = mockResults.filter(
+      (user) =>
+        user.display_name.toLowerCase().includes(query.toLowerCase()) ||
+        user.username.toLowerCase().includes(query.toLowerCase())
+    );
+
+    displaySearchResults(filteredResults, container);
+  }
+
+  function displaySearchResults(results, container) {
+    if (results.length === 0) {
+      container.innerHTML = `
+      <div class="search-no-results">
+        <i class="fas fa-search"></i>
+        <p>No users found</p>
+        <p style="font-size: 0.8rem;">Try searching with a different name</p>
+      </div>
+    `;
+    } else {
+      container.innerHTML = results
+        .map(
+          (user) => `
+          <div class="search-result-item ${
+            user._id === "{{ user._id }}" ? "current-user-item" : ""
+          }">
+            <div class="search-result-avatar">
+              ${user.display_name[0].toUpperCase()}
+            </div>
+            <div class="search-result-info">
+              <div class="search-result-name">
+                <span onclick="viewUserProfile('${
+                  user._id
+                }')" style="cursor: pointer;">
+                  ${user.display_name}
+                </span>
+                <span class="relationship-status relationship-${
+                  user.relationship
+                }">
+                  ${
+                    user.relationship === "friends"
+                      ? "Friends"
+                      : user.relationship === "pending"
+                      ? "Request Sent"
+                      : "Add Friend"
+                  }
+                </span>
+              </div>
+              <div class="search-result-username" onclick="viewUserProfile('${
+                user._id
+              }')" style="cursor: pointer;">
+                @${user.username}
+              </div>
+              <div class="search-result-status" onclick="viewUserProfile('${
+                user._id
+              }')" style="cursor: pointer;">
+                <span class="search-status-${
+                  user.is_online ? "online" : "offline"
+                }">
+                  <i class="fas fa-circle"></i>
+                  ${user.is_online ? "Online" : "Offline"}
+                </span>
+              </div>
+              ${
+                user.status
+                  ? `<div class="search-result-bio" onclick="viewUserProfile('${user._id}')" style="cursor: pointer;">${user.status}</div>`
+                  : ""
+              }
+
+              <!-- Action Buttons Container -->
+              <div class="search-result-actions-container">
+                <button class="search-result-action-btn profile-action-btn" onclick="viewUserProfile('${
+                  user._id
+                }')" title="View Profile">
+                  <i class="fas fa-user"></i> Profile
+                </button>
+                <button class="search-result-action-btn copy-action-btn" onclick="event.stopPropagation(); copyUserId('${
+                  user._id
+                }', this)" title="Copy User ID">
+                  <i class="fas fa-copy"></i> Copy ID
+                </button>
+              </div>
+
+              <!-- User ID Section -->
+              <div class="user-id-section">
+                <div class="user-id-header">
+                  <span class="user-id-label">User ID:</span>
+                </div>
+                <div class="user-id-value-container">
+                  <div class="user-id-value">
+                    <strong>${user._id}</strong>
+                  </div>
+                  <button class="copy-id-btn" onclick="event.stopPropagation(); copyUserId('${
+                    user._id
+                  }', this)">
+                    <i class="fas fa-copy"></i> Copy User ID
+                  </button>
+                </div>
+              </div>
+            </div>
+            ${
+              user.relationship === "none" && user._id !== "{{ user._id }}"
+                ? `
+              <div class="search-result-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); sendFriendRequest('${user._id}')">
+                  <i class="fas fa-user-plus"></i>
+                </button>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    container.style.display = "block";
+  }
+
+  function copyUserId(userId, button) {
+    navigator.clipboard
+      .writeText(userId)
+      .then(() => {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add("copied");
+
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove("copied");
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy user ID: ", err);
+        alert("Failed to copy user ID to clipboard");
+      });
+  }
+
+  // Utility Functions
+  function showNotification(message, type = "info") {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll(
+      ".dashboard-notification"
+    );
+    existingNotifications.forEach((notification) => notification.remove());
+
+    const notification = document.createElement("div");
+    notification.className = `dashboard-notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-${
+          type === "success"
+            ? "check"
+            : type === "error"
+            ? "exclamation-triangle"
+            : type === "warning"
+            ? "exclamation-circle"
+            : "info"
+        }-circle"></i>
+        <span>${message}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  // Navigation to Search Page
+  function navigateToSearch() {
+    window.location.href = "{{ url_for('search_users') }}";
+  }
+
+  // Event Listeners
+  // Close search results when clicking outside
+  document.addEventListener("click", function (e) {
+    const searchContainer = document.querySelector(".search-container");
+    const searchResults = document.getElementById("searchResults");
+
+    if (
+      searchContainer &&
+      searchResults &&
+      !searchContainer.contains(e.target)
+    ) {
+      searchResults.style.display = "none";
+    }
+  });
+
+  // Prevent search results from closing when clicking inside them
+  document
+    .getElementById("searchResults")
+    ?.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+
+  // Close search results on escape key
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      const searchResults = document.getElementById("searchResults");
+      if (searchResults) {
+        searchResults.style.display = "none";
+      }
+    }
+  });
+
+  // Close modals when clicking outside
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('groupDetailsModal');
+    if (e.target === modal) {
+      closeGroupDetails();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeGroupDetails();
+    }
+  });
+</script>
+
+<style>
+  /* Loading Screen Styles */
+  .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      var(--secondary-dark) 0%,
+      var(--primary-dark) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+  }
+
+  .loading-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loading-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+  }
+
+  .logo-container {
+    margin-bottom: 2rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .logo {
+    filter: drop-shadow(0 0 20px rgba(0, 243, 255, 0.3));
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .loading-text h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #00f3ff 0%, #0066ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+  }
+
+  .loading-text p {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .loading-progress {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00f3ff, #0066ff);
+    border-radius: 2px;
+    width: 0%;
+    animation: progress 2s ease-in-out infinite;
+  }
+
+  @keyframes progress {
+    0% {
+      width: 0%;
+    }
+    50% {
+      width: 70%;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  .loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    animation: bounce 1.4s ease-in-out infinite both;
+  }
+
+  .loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%,
+    80%,
+    100% {
+      transform: scale(0);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Search Icon Navigation Styles */
+  .search-header {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(
+      135deg,
+      var(--primary-blue),
+      var(--secondary-blue)
+    );
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+  }
+
+  .search-icon-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    background: linear-gradient(
+      135deg,
+      var(--secondary-blue),
+      var(--primary-blue)
+    );
+  }
+
+  .search-icon-nav:active {
+    transform: translateY(0);
+  }
+
+  .search-icon-nav i {
+    font-size: 14px;
+  }
+
+  .search-label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .loading-text h1 {
+      font-size: 2.5rem;
+    }
+
+    .loading-text p {
+      font-size: 1rem;
+    }
+
+    .logo {
+      width: 100px;
+      height: 100px;
+    }
+
+    .search-label {
+      display: none;
+    }
+
+    .search-icon-nav {
+      padding: 8px 12px;
+    }
+  }
+
+  /* View Toggle Styles */
+  .view-toggle {
+    display: flex;
+    background: var(--tertiary-dark);
+    border-radius: 0.75rem;
+    padding: 0.25rem;
+    margin: 1rem 0;
+    border: 1px solid var(--border-light);
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .toggle-btn.active {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .toggle-btn:hover:not(.active) {
+    background: rgba(0, 243, 255, 0.1);
+    color: var(--text-dark);
+  }
+
+  /* Group Item Styles */
+  .group-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: 1px solid var(--border-light);
+    background: var(--tertiary-dark);
+  }
+
+  .group-item:hover {
+    border-color: var(--primary-blue);
+    background: rgba(0, 243, 255, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .group-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--primary-blue),
+      var(--secondary-blue)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+  }
+
+  .group-info {
+    flex: 1;
+  }
+
+  .group-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .group-members {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+  }
+
+  .group-last-message {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    opacity: 0.8;
+  }
+
+  .group-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .group-item:hover .group-actions {
+    opacity: 1;
+  }
+
+  .group-action-btn {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: var(--secondary-dark);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .group-action-btn:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: scale(1.1);
+  }
+
+  .group-delete-btn:hover {
+    background: #ef4444;
+  }
+
+  /* Group Management Styles */
+  .groups-management-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .group-management-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    background: var(--tertiary-dark);
+  }
+
+  .group-management-info {
+    flex: 1;
+  }
+
+  .group-management-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .group-management-members {
+    font-size: 0.8rem;
+    color: var(--text-light);
+  }
+
+  .group-management-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  /* Group Participants Modal Styles */
+  .group-participant-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    background: var(--tertiary-dark);
+  }
+
+  .group-participant-item:hover {
+    border-color: var(--primary-blue);
+    background: rgba(0, 243, 255, 0.05);
+    transform: translateX(4px);
+  }
+
+  .participant-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--primary-blue),
+      var(--secondary-blue)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    margin-right: 1rem;
+  }
+
+  .participant-info {
+    flex: 1;
+  }
+
+  .participant-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .participant-username {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+  }
+
+  .participant-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-light);
+  }
+
+  .status-indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+  }
+
+  .status-indicator.online {
+    background: var(--success);
+  }
+
+  .status-indicator.offline {
+    background: var(--text-light);
+  }
+
+  .participant-action {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .group-participant-item:hover .participant-action {
+    opacity: 1;
+  }
+
+  /* Group Details Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+
+  .modal-content {
+    background: var(--secondary-dark);
+    border: 1px solid var(--primary-blue);
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-header h3 {
+    color: var(--text-dark);
+    margin: 0;
+  }
+
+  .btn-close {
+    background: transparent;
+    color: var(--text-light);
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+  }
+
+  .btn-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    gap: 1rem;
+  }
+
+  /* Enhanced Notification Styles */
+  .notification-header {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .notification-bell-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .notification-bell {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--tertiary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-light);
+    color: var(--text-dark);
+  }
+
+  .notification-bell:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .notification-bell.has-notifications {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    color: #ffc107;
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--secondary-dark);
+  }
+
+  .notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 400px;
+    max-width: 90vw;
+    background: var(--secondary-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .notification-dropdown.show {
+    display: block;
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .notification-dropdown .notification-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+  }
+
+  .notification-dropdown .notification-header h4 {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 1.1rem;
+  }
+
+  .notification-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text-light);
+    border: 1px solid var(--border-light);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-clear:hover {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+  }
+
+  .notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    position: relative;
+  }
+
+  .notification-item:hover {
+    background: rgba(0, 243, 255, 0.05);
+  }
+
+  .notification-item.unread {
+    background: rgba(0, 123, 255, 0.1);
+    border-left: 3px solid var(--primary-blue);
+  }
+
+  .notification-item.unread:hover {
+    background: rgba(0, 123, 255, 0.15);
+  }
+
+  .notification-item.consolidated {
+    background: rgba(255, 193, 7, 0.05);
+  }
+
+  .notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .notification-icon {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--tertiary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+  }
+
+  .notification-item.unread .notification-icon {
+    background: var(--primary-blue);
+    color: white;
+  }
+
+  .message-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    border-radius: 8px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--secondary-dark);
+  }
+
+  .notification-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notification-message {
+    color: var(--text-dark);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    word-wrap: break-word;
+  }
+
+  .notification-count {
+    font-size: 0.8rem;
+    color: var(--primary-blue);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .notification-time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .notification-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .notification-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-light);
+    text-align: center;
+  }
+
+  .notification-footer a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .notification-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .notification-loading,
+  .notification-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-light);
+  }
+
+  .notification-empty i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Active senders list */
+  .active-senders-list {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .active-sender-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .active-sender-item:hover {
+    background: rgba(0, 243, 255, 0.05);
+  }
+
+  .active-sender-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .active-sender-name {
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+
+  .active-sender-count {
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 8px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .active-sender-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .active-sender-item:hover .active-sender-actions {
+    opacity: 1;
+  }
+
+  /* Notification Toast Styles */
+  .notification-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--secondary-dark);
+    border: 1px solid var(--primary-blue);
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: var(--shadow-lg);
+    z-index: 10001;
+    max-width: 350px;
+    transform: translateX(400px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .notification-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .toast-content i {
+    color: var(--primary-blue);
+    font-size: 16px;
+  }
+
+  .toast-content span {
+    flex: 1;
+    color: var(--text-dark);
+    font-size: 14px;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .toast-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Pulse animation for badge */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .pulse {
+    animation: pulse 0.5s ease-in-out;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %} {% block title %}Select Profile - HangSpace{% endblock
+%} {% block content %}
+<div
+  class="container"
+  style="
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  "
+>
+  <div class="card" style="max-width: 500px; width: 100%">
+    <div style="text-align: center; margin-bottom: 32px">
+      <h1 style="color: var(--primary-blue); margin-bottom: 8px">
+        <i class="fas fa-user-circle"></i> Select Profile
+      </h1>
+      <p style="color: var(--text-light)">Choose a profile to continue</p>
+    </div>
+
+    {% if error %}
+    <div
+      style="
+        background: #fed7d7;
+        color: #c53030;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      "
+    >
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    <div style="margin-bottom: 24px">
+      {% if profiles %} {% for profile in profiles %}
+      <div
+        class="profile-item"
+        onclick="selectProfile('{{ profile._id }}')"
+        style="
+          display: flex;
+          align-items: center;
+          padding: 16px;
+          border: 1px solid var(--border-light);
+          border-radius: 8px;
+          margin-bottom: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.borderColor='var(--primary-blue)'; this.style.backgroundColor='#f8fbff'"
+        onmouseout="this.style.borderColor='var(--border-light)'; this.style.backgroundColor='transparent'"
+      >
+        <div
+          style="
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 16px;
+          "
+        >
+          {{ profile.display_name[0]|upper if profile.display_name else
+          profile.username[0]|upper }}
+        </div>
+        <div>
+          <div style="font-weight: 600; color: var(--text-dark)">
+            {{ profile.display_name if profile.display_name else
+            profile.username }}
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-light)">
+            @{{ profile.username }}
+          </div>
+        </div>
+      </div>
+      {% endfor %} {% else %}
+      <div
+        style="
+          text-align: center;
+          padding: 40px;
+          color: var(--text-light);
+          border: 2px dashed var(--border-light);
+          border-radius: 8px;
+        "
+      >
+        <i
+          class="fas fa-user-plus"
+          style="font-size: 2rem; margin-bottom: 16px"
+        ></i>
+        <p>No profiles found</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <a
+        href="{{ url_for('create_profile') }}"
+        class="btn btn-primary"
+        style="justify-content: center"
+      >
+        <i class="fas fa-plus"></i> Create New Profile
+      </a>
+
+      <a
+        href="{{ url_for('logout') }}"
+        class="btn"
+        style="
+          justify-content: center;
+          background: #f7fafc;
+          color: var(--text-dark);
+        "
+      >
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function selectProfile(profileId) {
+    // Show loading state
+    const profileItems = document.querySelectorAll(".profile-item");
+    profileItems.forEach((item) => {
+      item.style.pointerEvents = "none";
+      item.style.opacity = "0.6";
+    });
+
+    // Submit form to select profile
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/select-profile";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "profile_id";
+    input.value = profileId;
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+{% endblock %}

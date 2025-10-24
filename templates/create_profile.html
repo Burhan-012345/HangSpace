@@ -1,0 +1,148 @@
+{% extends "base.html" %} {% block title %}Create Profile - HangSpace{% endblock
+%} {% block content %}
+<div
+  class="container"
+  style="
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  "
+>
+  <div class="card" style="max-width: 450px; width: 100%">
+    <div style="text-align: center; margin-bottom: 32px">
+      <h1 style="color: var(--primary-blue); margin-bottom: 8px">
+        <i class="fas fa-user-plus"></i> Create Profile
+      </h1>
+      <p style="color: var(--text-light)">Create a new HangSpace profile</p>
+    </div>
+
+    {% if error %}
+    <div
+      style="
+        background: #fed7d7;
+        color: #c53030;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      "
+    >
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" id="profileForm">
+      <div style="margin-bottom: 20px">
+        <label
+          style="
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+          "
+        >
+          Display Name
+        </label>
+        <input
+          type="text"
+          name="display_name"
+          required
+          style="
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+          "
+          placeholder="Enter your display name"
+          value="{{ request.form.display_name }}"
+        />
+      </div>
+
+      <div style="margin-bottom: 24px">
+        <label
+          style="
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+          "
+        >
+          Username
+        </label>
+        <input
+          type="text"
+          name="username"
+          required
+          style="
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+          "
+          placeholder="Choose a username"
+          id="usernameInput"
+          value="{{ request.form.username }}"
+        />
+        <div
+          style="font-size: 0.8rem; color: var(--text-light); margin-top: 4px"
+        >
+          This will be your unique identifier
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        style="width: 100%; justify-content: center"
+      >
+        <i class="fas fa-check"></i> Create Profile
+      </button>
+    </form>
+
+    <div
+      style="
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-light);
+      "
+    >
+      <a
+        href="{{ url_for('select_profile') }}"
+        style="color: var(--primary-blue); text-decoration: none"
+      >
+        <i class="fas fa-arrow-left"></i> Back to Profile Selection
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("usernameInput")
+    .addEventListener("input", function (e) {
+      this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+    });
+
+  document
+    .getElementById("profileForm")
+    .addEventListener("submit", function (e) {
+      const username = document.getElementById("usernameInput").value;
+      if (username.length < 3) {
+        e.preventDefault();
+        alert("Username must be at least 3 characters long");
+        return false;
+      }
+
+      // Show loading state
+      const submitBtn = this.querySelector('button[type="submit"]');
+      submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Creating Profile...';
+      submitBtn.disabled = true;
+
+      return true;
+    });
+</script>
+{% endblock %}

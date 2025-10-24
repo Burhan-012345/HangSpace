@@ -1,0 +1,1034 @@
+{% extends "base.html" %} {% block title %}Search Users - HangSpace{% endblock
+%} {% block extra_css %}
+<link
+  href="{{ url_for('static', filename='css/search.css') }}"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
+<div class="search-page-container">
+  <div class="search-header">
+    <h1>Search Users</h1>
+    <p>Find users by username, display name, or user ID</p>
+  </div>
+
+  <div class="search-input-container">
+    <div class="search-input-wrapper">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Enter username, display name, or user ID..."
+        id="searchInput"
+        autocomplete="off"
+      />
+      <i class="fas fa-search search-icon"></i>
+      <button class="clear-search" id="clearSearch" style="display: none">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-results-container">
+    <div id="searchResults">
+      <div class="search-placeholder">
+        <i class="fas fa-search"></i>
+        <h3>Start searching for users</h3>
+        <p>Enter a username, display name, or user ID to find users</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-tips">
+    <h4>Search Tips:</h4>
+    <ul>
+      <li>Search by username (e.g., "johndoe")</li>
+      <li>Search by display name (e.g., "John Smith")</li>
+      <li>Search by user ID (e.g., "507f1f77bcf86cd799439011")</li>
+      <li>Partial matches are supported</li>
+    </ul>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const clearSearch = document.getElementById("clearSearch");
+    const searchResults = document.getElementById("searchResults");
+
+    let searchTimeout;
+
+    // Search functionality
+    searchInput.addEventListener("input", function (e) {
+      const query = e.target.value.trim();
+
+      // Show/hide clear button
+      if (query.length > 0) {
+        clearSearch.style.display = "block";
+      } else {
+        clearSearch.style.display = "none";
+        showPlaceholder();
+        return;
+      }
+
+      // Clear previous timeout
+      clearTimeout(searchTimeout);
+
+      // Set new timeout for search
+      searchTimeout = setTimeout(() => {
+        if (query.length >= 2) {
+          performSearch(query);
+        } else {
+          showPlaceholder();
+        }
+      }, 300);
+    });
+
+    // Clear search
+    clearSearch.addEventListener("click", function () {
+      searchInput.value = "";
+      searchInput.focus();
+      clearSearch.style.display = "none";
+      showPlaceholder();
+    });
+
+    // Enter key to search
+    searchInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        const query = e.target.value.trim();
+        if (query.length >= 2) {
+          performSearch(query);
+        }
+      }
+    });
+
+    function performSearch(query) {
+      // Show loading state
+      searchResults.innerHTML = `
+        <div class="search-loading">
+          <div class="loading-spinner"></div>
+          <p>Searching for users...</p>
+        </div>
+      `;
+
+      // Using GET request for search
+      fetch("/api/search-users?query=" + encodeURIComponent(query))
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          displaySearchResults(data.users || []);
+        })
+        .catch((error) => {
+          console.error("Search error:", error);
+          searchResults.innerHTML = `
+            <div class="search-error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Error performing search. Please try again.</p>
+              <p style="font-size: 0.8rem; margin-top: 0.5rem;">Error: ${error.message}</p>
+            </div>
+          `;
+        });
+    }
+
+    function displaySearchResults(users) {
+      if (users.length === 0) {
+        searchResults.innerHTML = `
+          <div class="search-no-results">
+            <i class="fas fa-search"></i>
+            <h3>No users found</h3>
+            <p>Try searching with a different name or username</p>
+          </div>
+        `;
+        return;
+      }
+
+      const resultsHTML = users
+        .map(
+          (user) => `
+        <div class="search-result-item">
+          <div class="search-result-avatar">
+            ${
+              user.display_name
+                ? user.display_name[0].toUpperCase()
+                : user.username[0].toUpperCase()
+            }
+          </div>
+          <div class="search-result-info">
+            <div class="search-result-name">
+              <span>${user.display_name || user.username}</span>
+              <span class="relationship-status relationship-${
+                user.relationship || "none"
+              }">
+                ${
+                  user.relationship === "friends"
+                    ? "Friends"
+                    : user.relationship === "pending"
+                    ? "Request Sent"
+                    : user.relationship === "self"
+                    ? "You"
+                    : "Not Friends"
+                }
+              </span>
+            </div>
+            <div class="search-result-username">
+              @${user.username}
+            </div>
+            ${
+              user.status
+                ? `<div class="search-result-status">${user.status}</div>`
+                : ""
+            }
+            
+            <div class="user-id-section">
+              <div class="user-id-header">
+                <span class="user-id-label">User ID:</span>
+              </div>
+              <div class="user-id-value-container">
+                <div class="user-id-value">
+                  <strong>${user._id}</strong>
+                </div>
+                <button class="copy-id-btn" onclick="event.stopPropagation(); copyUserId('${
+                  user._id
+                }', this)">
+                  <i class="fas fa-copy"></i> Copy User ID
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="search-result-actions">
+            ${
+              user.relationship === "none" && user.relationship !== "self"
+                ? `
+              <button class="btn btn-add-friend" onclick="event.stopPropagation(); sendFriendRequest('${user._id}')">
+                <i class="fas fa-user-plus"></i> Add Friend
+              </button>
+            `
+                : ""
+            }
+            <button class="btn btn-profile" onclick="event.stopPropagation(); viewUserProfile('${
+              user._id
+            }')">
+              <i class="fas fa-user"></i> View Profile
+            </button>
+            ${
+              user.relationship === "friends"
+                ? `
+              <button class="btn btn-chat" onclick="event.stopPropagation(); startChatWithFriend('${user._id}')">
+                <i class="fas fa-comment"></i> Message
+              </button>
+            `
+                : ""
+            }
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      searchResults.innerHTML = resultsHTML;
+    }
+
+    function showPlaceholder() {
+      searchResults.innerHTML = `
+        <div class="search-placeholder">
+          <i class="fas fa-search"></i>
+          <h3>Start searching for users</h3>
+          <p>Enter a username, display name, or user ID to find users</p>
+        </div>
+      `;
+    }
+  });
+
+  // Copy user ID function
+  function copyUserId(userId, button) {
+    navigator.clipboard
+      .writeText(userId)
+      .then(() => {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add("copied");
+
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove("copied");
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy user ID: ", err);
+        showNotification("Failed to copy user ID to clipboard", "error");
+      });
+  }
+
+  // Friend request function
+  function sendFriendRequest(userId) {
+    fetch("/api/send-friend-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Friend request sent!", "success");
+          // Update the relationship status in the search results
+          const currentQuery = document
+            .getElementById("searchInput")
+            .value.trim();
+          if (currentQuery.length >= 2) {
+            // Re-run the search to update the UI
+            fetch("/api/search-users?query=" + encodeURIComponent(currentQuery))
+              .then((response) => response.json())
+              .then((data) => {
+                const searchResults = document.getElementById("searchResults");
+                if (searchResults) {
+                  // Re-display results with updated relationship status
+                  const resultsHTML = (data.users || [])
+                    .map(
+                      (user) => `
+                  <div class="search-result-item">
+                    <div class="search-result-avatar">
+                      ${
+                        user.display_name
+                          ? user.display_name[0].toUpperCase()
+                          : user.username[0].toUpperCase()
+                      }
+                    </div>
+                    <div class="search-result-info">
+                      <div class="search-result-name">
+                        <span>${user.display_name || user.username}</span>
+                        <span class="relationship-status relationship-${
+                          user.relationship || "none"
+                        }">
+                          ${
+                            user.relationship === "friends"
+                              ? "Friends"
+                              : user.relationship === "pending"
+                              ? "Request Sent"
+                              : user.relationship === "self"
+                              ? "You"
+                              : "Not Friends"
+                          }
+                        </span>
+                      </div>
+                      <div class="search-result-username">
+                        @${user.username}
+                      </div>
+                      ${
+                        user.status
+                          ? `<div class="search-result-status">${user.status}</div>`
+                          : ""
+                      }
+                      
+                      <div class="user-id-section">
+                        <div class="user-id-header">
+                          <span class="user-id-label">User ID:</span>
+                        </div>
+                        <div class="user-id-value-container">
+                          <div class="user-id-value">
+                            <strong>${user._id}</strong>
+                          </div>
+                          <button class="copy-id-btn" onclick="event.stopPropagation(); copyUserId('${
+                            user._id
+                          }', this)">
+                            <i class="fas fa-copy"></i> Copy User ID
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="search-result-actions">
+                      ${
+                        user.relationship === "none" &&
+                        user.relationship !== "self"
+                          ? `
+                        <button class="btn btn-add-friend" onclick="event.stopPropagation(); sendFriendRequest('${user._id}')">
+                          <i class="fas fa-user-plus"></i> Add Friend
+                        </button>
+                      `
+                          : ""
+                      }
+                      <button class="btn btn-profile" onclick="event.stopPropagation(); viewUserProfile('${
+                        user._id
+                      }')">
+                        <i class="fas fa-user"></i> View Profile
+                      </button>
+                      ${
+                        user.relationship === "friends"
+                          ? `
+                        <button class="btn btn-chat" onclick="event.stopPropagation(); startChatWithFriend('${user._id}')">
+                          <i class="fas fa-comment"></i> Message
+                        </button>
+                      `
+                          : ""
+                      }
+                    </div>
+                  </div>
+                `
+                    )
+                    .join("");
+                  searchResults.innerHTML = resultsHTML;
+                }
+              });
+          }
+        } else {
+          showNotification("Error: " + data.error, "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error sending friend request:", error);
+        showNotification("Error sending friend request", "error");
+      });
+  }
+
+  // Start chat with friend function
+  function startChatWithFriend(friendId) {
+    showNotification("Starting chat...", "info");
+
+    fetch("/start-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        friend_id: friendId,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showNotification("Chat started!", "success");
+          // Redirect to the chat
+          setTimeout(() => {
+            window.location.href = "/chat/" + data.chat_id;
+          }, 1000);
+        } else {
+          showNotification("Error starting chat: " + data.error, "error");
+        }
+      })
+      .catch((error) => {
+        console.error("Error starting chat:", error);
+        showNotification("Error starting chat", "error");
+      });
+  }
+
+  // View profile function
+  function viewUserProfile(userId) {
+    window.location.href = "/user/" + userId;
+  }
+
+  // Notification function
+  function showNotification(message, type = "info") {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll(".notification");
+    existingNotifications.forEach((notification) => notification.remove());
+
+    const notification = document.createElement("div");
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <i class="fas fa-${
+          type === "success"
+            ? "check"
+            : type === "error"
+            ? "exclamation-triangle"
+            : type === "warning"
+            ? "exclamation-circle"
+            : "info"
+        }"></i>
+        <span>${message}</span>
+        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+</script>
+
+<style>
+  :root {
+    --neon-blue: #00f3ff;
+    --neon-blue-dark: #0066ff;
+    --neon-blue-glow: 0 0 10px rgba(0, 243, 255, 0.7),
+      0 0 20px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.3);
+    --neon-green: #00ff00;
+    --neon-green-glow: 0 0 10px rgba(0, 255, 0, 0.7);
+    --neon-purple: #b300ff;
+    --neon-purple-glow: 0 0 10px rgba(179, 0, 255, 0.7);
+    --dark-bg: #0a0a0a;
+    --darker-bg: #050505;
+    --dark-border: #1a1a1a;
+    --darker-border: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #666666;
+  }
+
+  .search-page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--dark-bg);
+    min-height: 100vh;
+  }
+
+  .search-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--dark-border);
+  }
+
+  .search-header h1 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: var(--neon-blue-glow);
+  }
+
+  .search-header p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    opacity: 0.8;
+  }
+
+  .search-input-container {
+    margin-bottom: 3rem;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 1.2rem 4rem 1.2rem 2rem;
+    border: 2px solid var(--dark-border);
+    border-radius: 3rem;
+    background: var(--darker-bg);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--neon-blue);
+    box-shadow: var(--neon-blue-glow), 0 4px 20px rgba(0, 0, 0, 0.5);
+    background: var(--darker-bg);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-icon {
+    position: absolute;
+    right: 3.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--neon-blue);
+    font-size: 1.2rem;
+    text-shadow: var(--neon-blue-glow);
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--dark-border);
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.6rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+  }
+
+  .clear-search:hover {
+    background: var(--neon-blue);
+    color: var(--dark-bg);
+    box-shadow: var(--neon-blue-glow);
+  }
+
+  .search-results-container {
+    min-height: 500px;
+    margin-bottom: 2rem;
+  }
+
+  .search-placeholder,
+  .search-loading,
+  .search-no-results,
+  .search-error {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+  }
+
+  .search-placeholder i,
+  .search-no-results i,
+  .search-error i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+    color: var(--neon-blue);
+    text-shadow: var(--neon-blue-glow);
+  }
+
+  .search-placeholder h3,
+  .search-no-results h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  .search-loading .loading-spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 3px solid var(--dark-border);
+    border-top: 3px solid var(--neon-blue);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: spin 1s linear infinite;
+    box-shadow: var(--neon-blue-glow);
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .search-result-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 2rem;
+    border: 1px solid var(--dark-border);
+    border-radius: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--darker-bg);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .search-result-item::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 243, 255, 0.1),
+      transparent
+    );
+    transition: left 0.6s ease;
+  }
+
+  .search-result-item:hover {
+    border-color: var(--neon-blue);
+    transform: translateY(-3px);
+    box-shadow: var(--neon-blue-glow), 0 8px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  .search-result-item:hover::before {
+    left: 100%;
+  }
+
+  .search-result-avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--neon-blue),
+      var(--neon-blue-dark)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-bg);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-right: 2rem;
+    box-shadow: var(--neon-blue-glow);
+    flex-shrink: 0;
+  }
+
+  .search-result-info {
+    flex: 1;
+  }
+
+  .search-result-name {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .search-result-name span:first-child {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+  }
+
+  .relationship-status {
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .relationship-friends {
+    background: rgba(0, 255, 0, 0.1);
+    color: var(--neon-green);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    box-shadow: var(--neon-green-glow);
+  }
+
+  .relationship-pending {
+    background: rgba(255, 255, 0, 0.1);
+    color: #ffff00;
+    border: 1px solid rgba(255, 255, 0, 0.3);
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+  }
+
+  .relationship-self {
+    background: rgba(0, 243, 255, 0.1);
+    color: var(--neon-blue);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    box-shadow: var(--neon-blue-glow);
+  }
+
+  .relationship-none {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid var(--dark-border);
+  }
+
+  .search-result-username {
+    color: var(--neon-blue);
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
+
+  .search-result-status {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+  }
+
+  .user-id-section {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--dark-border);
+    backdrop-filter: blur(10px);
+  }
+
+  .user-id-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .user-id-label {
+    font-size: 0.9rem;
+    color: var(--neon-blue);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: var(--neon-blue-glow);
+  }
+
+  .user-id-value-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .user-id-value {
+    flex: 1;
+    font-family: "Courier New", monospace;
+    font-size: 1rem;
+    color: var(--text-primary);
+    word-break: break-all;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--dark-border);
+  }
+
+  .copy-id-btn {
+    background: linear-gradient(
+      135deg,
+      var(--neon-blue),
+      var(--neon-blue-dark)
+    );
+    color: var(--dark-bg);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: var(--neon-blue-glow);
+    white-space: nowrap;
+  }
+
+  .copy-id-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.8), 0 0 30px rgba(0, 243, 255, 0.6);
+  }
+
+  .copy-id-btn.copied {
+    background: linear-gradient(135deg, var(--neon-green), #00cc00);
+    box-shadow: var(--neon-green-glow);
+  }
+
+  .search-result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-left: 2rem;
+    flex-shrink: 0;
+    min-width: 140px;
+  }
+
+  .btn {
+    border: none;
+    padding: 0.8rem 1.2rem;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-add-friend {
+    background: linear-gradient(135deg, var(--neon-green), #00cc00);
+    color: var(--dark-bg);
+    box-shadow: var(--neon-green-glow);
+  }
+
+  .btn-add-friend:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.8);
+  }
+
+  .btn-profile {
+    background: linear-gradient(
+      135deg,
+      var(--neon-blue),
+      var(--neon-blue-dark)
+    );
+    color: var(--dark-bg);
+    box-shadow: var(--neon-blue-glow);
+  }
+
+  .btn-profile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.8);
+  }
+
+  .btn-chat {
+    background: linear-gradient(135deg, var(--neon-purple), #9900cc);
+    color: var(--dark-bg);
+    box-shadow: var(--neon-purple-glow);
+  }
+
+  .btn-chat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(179, 0, 255, 0.8);
+  }
+
+  .search-tips {
+    background: var(--darker-bg);
+    padding: 2rem;
+    border-radius: 1.5rem;
+    border: 1px solid var(--dark-border);
+    margin-top: 3rem;
+  }
+
+  .search-tips h4 {
+    color: var(--neon-blue);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    text-shadow: var(--neon-blue-glow);
+  }
+
+  .search-tips ul {
+    color: var(--text-secondary);
+    padding-left: 2rem;
+  }
+
+  .search-tips li {
+    margin-bottom: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .notification {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1.2rem 1.8rem;
+    border-radius: 1rem;
+    color: var(--dark-bg);
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    box-shadow: var(--neon-blue-glow);
+    border: 1px solid var(--neon-blue);
+    max-width: 400px;
+  }
+
+  .notification-success {
+    background: linear-gradient(135deg, var(--neon-green), #00cc00);
+  }
+
+  .notification-error {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+  }
+
+  .notification-warning {
+    background: linear-gradient(135deg, #ffaa00, #ff8800);
+  }
+
+  .notification-info {
+    background: linear-gradient(
+      135deg,
+      var(--neon-blue),
+      var(--neon-blue-dark)
+    );
+  }
+
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .notification-close {
+    background: none;
+    border: none;
+    color: var(--dark-bg);
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 50%;
+    margin-left: auto;
+    transition: background 0.3s ease;
+  }
+
+  .notification-close:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .search-page-container {
+      padding: 1rem;
+    }
+
+    .search-header h1 {
+      font-size: 2rem;
+    }
+
+    .search-result-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 1.5rem;
+    }
+
+    .search-result-avatar {
+      margin-right: 0;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-result-actions {
+      margin-left: 0;
+      margin-top: 1.5rem;
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .search-result-actions .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .user-id-value-container {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .copy-id-btn {
+      width: 100%;
+    }
+
+    .search-result-name {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .search-result-actions {
+      flex-direction: column;
+    }
+
+    .search-result-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
