@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 - Page Not Found | HangSpace</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #000000;
+        color: #ffffff;
+        font-family: "Arial", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle at 20% 80%,
+            rgba(0, 100, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(0, 200, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(0, 150, 255, 0.05) 0%,
+            transparent 50%
+          );
+        z-index: -1;
+      }
+
+      .container {
+        text-align: center;
+        z-index: 1;
+        padding: 2rem;
+        max-width: 600px;
+      }
+
+      .error-code {
+        font-size: 8rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, #00a2ff, #00f7ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(0, 247, 255, 0.5);
+        margin-bottom: 1rem;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      .error-title {
+        font-size: 2rem;
+        color: #00f7ff;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .error-message {
+        font-size: 1.1rem;
+        color: #cccccc;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+
+      .neon-box {
+        border: 2px solid #00f7ff;
+        border-radius: 10px;
+        padding: 2rem;
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 20px rgba(0, 247, 255, 0.3),
+          inset 0 0 20px rgba(0, 247, 255, 0.1);
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+      }
+
+      .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 12px 30px;
+        border: 2px solid #00a2ff;
+        background: transparent;
+        color: #00a2ff;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 247, 255, 0.4),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn:hover {
+        background: #00a2ff;
+        color: #000000;
+        box-shadow: 0 0 20px rgba(0, 247, 255, 0.7);
+        transform: translateY(-2px);
+      }
+
+      .btn-primary {
+        background: #00a2ff;
+        color: #000000;
+        border-color: #00a2ff;
+      }
+
+      .btn-primary:hover {
+        background: #00f7ff;
+        border-color: #00f7ff;
+        box-shadow: 0 0 30px rgba(0, 247, 255, 0.9);
+      }
+
+      .floating-elements {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .floating-element {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #00f7ff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #00f7ff;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes glow {
+        0% {
+          text-shadow: 0 0 20px rgba(0, 247, 255, 0.5);
+        }
+        100% {
+          text-shadow: 0 0 30px rgba(0, 247, 255, 0.8),
+            0 0 40px rgba(0, 247, 255, 0.6);
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0) translateX(0);
+        }
+        25% {
+          transform: translateY(-20px) translateX(10px);
+        }
+        50% {
+          transform: translateY(-10px) translateX(20px);
+        }
+        75% {
+          transform: translateY(-30px) translateX(-10px);
+        }
+      }
+
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .error-code {
+          font-size: 6rem;
+        }
+
+        .error-title {
+          font-size: 1.5rem;
+        }
+
+        .actions {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .btn {
+          width: 200px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .error-code {
+          font-size: 4rem;
+        }
+
+        .error-title {
+          font-size: 1.2rem;
+        }
+
+        .neon-box {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+
+    <div class="floating-elements" id="floatingElements"></div>
+
+    <div class="container">
+      <div class="neon-box">
+        <div class="error-code pulse">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+          The page you're looking for seems to have drifted into the digital
+          void. It might have been moved, deleted, or never existed in this
+          dimension.
+        </p>
+        <div class="actions">
+          <a href="/" class="btn btn-primary">Return Home</a>
+          <a href="/dashboard" class="btn">Go to Dashboard</a>
+          <a href="javascript:history.back()" class="btn">Go Back</a>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; color: #666; font-size: 0.9rem">
+        <p>
+          If you believe this is an error, contact support or try searching for
+          what you need.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Create floating elements
+      function createFloatingElements() {
+        const container = document.getElementById("floatingElements");
+        const elementCount = 15;
+
+        for (let i = 0; i < elementCount; i++) {
+          const element = document.createElement("div");
+          element.className = "floating-element";
+
+          // Random position
+          const left = Math.random() * 100;
+          const top = Math.random() * 100;
+          const size = Math.random() * 3 + 2;
+          const delay = Math.random() * 5;
+          const duration = Math.random() * 3 + 4;
+
+          element.style.left = `${left}%`;
+          element.style.top = `${top}%`;
+          element.style.width = `${size}px`;
+          element.style.height = `${size}px`;
+          element.style.animationDelay = `${delay}s`;
+          element.style.animationDuration = `${duration}s`;
+
+          container.appendChild(element);
+        }
+      }
+
+      // Initialize when page loads
+      document.addEventListener("DOMContentLoaded", createFloatingElements);
+
+      // Add interactive background effect
+      document.addEventListener("mousemove", (e) => {
+        const background = document.querySelector(".background");
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+
+        background.style.background = `
+                radial-gradient(circle at ${x}% ${y}%, rgba(0, 100, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at ${100 - x}% ${
+          100 - y
+        }%, rgba(0, 200, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at ${x}% ${
+          100 - y
+        }%, rgba(0, 150, 255, 0.05) 0%, transparent 50%)
+            `;
+      });
+    </script>
+  </body>
+</html>
