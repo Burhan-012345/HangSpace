@@ -1,0 +1,766 @@
+{% extends "base.html" %} {% block title %}Learn More - HangSpace{% endblock %}
+{% block content %}
+<div class="learn-more-container">
+  <!-- Hero Section -->
+  <section class="learn-hero">
+    <div class="hero-background">
+      <div class="floating-elements">
+        <div class="floating-element el-1"></div>
+        <div class="floating-element el-2"></div>
+        <div class="floating-element el-3"></div>
+        <div class="floating-element el-4"></div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">Discover HangSpace</h1>
+        <p class="hero-subtitle">
+          The next generation real-time communication platform designed for
+          meaningful connections
+        </p>
+        <div class="hero-actions">
+          <a href="{{ url_for('login') }}" class="btn btn-primary btn-large">
+            <i class="fab fa-google"></i> Get Started Free
+          </a>
+          <a href="#features" class="btn btn-secondary btn-large">
+            <i class="fas fa-rocket"></i> Explore Features
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Overview -->
+  <section id="features" class="features-overview">
+    <div class="container">
+      <h2 class="section-title">Powerful Features for Modern Communication</h2>
+      <p class="section-subtitle">
+        Everything you need to stay connected with friends, family, and
+        communities
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>Real-time Messaging</h3>
+          <p>
+            Experience instant message delivery with live typing indicators,
+            read receipts, and seamless synchronization across all your devices.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> Instant message delivery</li>
+            <li><i class="fas fa-check"></i> Live typing indicators</li>
+            <li><i class="fas fa-check"></i> Read receipts</li>
+            <li><i class="fas fa-check"></i> Cross-device sync</li>
+          </ul>
+        </div>
+
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>Smart Friend System</h3>
+          <p>
+            Build and manage your social network with our intuitive friend
+            system. Send requests, manage connections, and discover new friends.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> Friend requests</li>
+            <li><i class="fas fa-check"></i> Connection management</li>
+            <li><i class="fas fa-check"></i> Friend discovery</li>
+            <li><i class="fas fa-check"></i> Profile customization</li>
+          </ul>
+        </div>
+
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h3>Enterprise Security</h3>
+          <p>
+            Your privacy is our priority. HangSpace uses industry-leading
+            security measures to protect your conversations and data.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> End-to-end encryption</li>
+            <li><i class="fas fa-check"></i> Secure authentication</li>
+            <li><i class="fas fa-check"></i> Data protection</li>
+            <li><i class="fas fa-check"></i> Privacy controls</li>
+          </ul>
+        </div>
+
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-palette"></i>
+          </div>
+          <h3>Customizable Experience</h3>
+          <p>
+            Personalize your chat environment with themes, custom backgrounds,
+            and layout options that match your style.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> Multiple themes</li>
+            <li><i class="fas fa-check"></i> Dark/Light modes</li>
+            <li><i class="fas fa-check"></i> Custom backgrounds</li>
+            <li><i class="fas fa-check"></i> Layout options</li>
+          </ul>
+        </div>
+
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Universal Compatibility</h3>
+          <p>
+            Access HangSpace from any device with our responsive design. Perfect
+            experience on desktop, tablet, and mobile.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> Responsive design</li>
+            <li><i class="fas fa-check"></i> Cross-platform</li>
+            <li><i class="fas fa-check"></i> Mobile optimized</li>
+            <li><i class="fas fa-check"></i> Offline support</li>
+          </ul>
+        </div>
+
+        <div class="feature-card-large">
+          <div class="feature-icon-large">
+            <i class="fas fa-bell"></i>
+          </div>
+          <h3>Smart Notifications</h3>
+          <p>
+            Stay informed without being overwhelmed. Our intelligent
+            notification system consolidates and prioritizes alerts.
+          </p>
+          <ul class="feature-list">
+            <li><i class="fas fa-check"></i> Consolidated alerts</li>
+            <li><i class="fas fa-check"></i> Priority sorting</li>
+            <li><i class="fas fa-check"></i> Custom schedules</li>
+            <li><i class="fas fa-check"></i> Do Not Disturb</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works-detailed">
+    <div class="container">
+      <h2 class="section-title">Getting Started is Easy</h2>
+      <div class="steps-detailed">
+        <div class="step-detailed">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Sign Up in Seconds</h3>
+            <p>
+              Use your Google account to create your HangSpace profile
+              instantly. No passwords to remember, no lengthy forms to fill.
+            </p>
+          </div>
+        </div>
+        <div class="step-detailed">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Create Your Profile</h3>
+            <p>
+              Choose your unique username, set a display name, and customize
+              your profile to let friends recognize you.
+            </p>
+          </div>
+        </div>
+        <div class="step-detailed">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Connect with Friends</h3>
+            <p>
+              Search for friends, send connection requests, and start building
+              your social network on HangSpace.
+            </p>
+          </div>
+        </div>
+        <div class="step-detailed">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3>Start Chatting</h3>
+            <p>
+              Begin conversations, create group chats, and experience seamless
+              real-time communication with all features unlocked.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>Is HangSpace really free?</h3>
+          <p>
+            Yes! All core features including unlimited 1-on-1 chats, group
+            messaging, and file sharing are completely free forever.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>How secure is my data?</h3>
+          <p>
+            We use industry-standard encryption and security practices to
+            protect your conversations and personal information.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Can I use HangSpace on multiple devices?</h3>
+          <p>
+            Absolutely! HangSpace syncs seamlessly across all your devices -
+            desktop, tablet, and mobile.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>How do I invite friends?</h3>
+          <p>
+            You can search for friends by username or email, or share your
+            profile link to connect with others.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3 id="privacy">What is your privacy policy?</h3>
+          <p>
+            We never sell your data. We collect only necessary information to
+            provide our services and improve your experience.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3 id="terms">What are your terms of service?</h3>
+          <p>
+            Our terms ensure a safe and respectful environment for all users. We
+            prohibit spam, harassment, and illegal activities.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to Transform Your Communication?</h2>
+        <p>
+          Join thousands of users who have made HangSpace their go-to platform
+          for real-time chat
+        </p>
+        <div class="cta-buttons">
+          <a
+            href="{{ url_for('login') }}"
+            class="btn btn-primary btn-large btn-glow"
+          >
+            <i class="fab fa-google"></i> Start Chatting Now
+          </a>
+          <a href="{{ url_for('index') }}" class="btn btn-secondary btn-large">
+            <i class="fas fa-home"></i> Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .learn-more-container {
+    min-height: 100vh;
+  }
+
+  /* Hero Section */
+  .learn-hero {
+    background: linear-gradient(
+      135deg,
+      var(--primary-dark) 0%,
+      var(--secondary-dark) 100%
+    );
+    padding: 6rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .floating-elements {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .floating-element {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0, 243, 255, 0.1);
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .el-1 {
+    width: 120px;
+    height: 120px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  .el-2 {
+    width: 80px;
+    height: 80px;
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+  }
+
+  .el-3 {
+    width: 150px;
+    height: 150px;
+    bottom: 10%;
+    left: 20%;
+    animation-delay: 4s;
+  }
+
+  .el-4 {
+    width: 100px;
+    height: 100px;
+    top: 30%;
+    right: 25%;
+    animation-delay: 6s;
+  }
+
+  .hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-full {
+    width: 100%;
+  }
+
+  /* Features Overview */
+  .features-overview {
+    padding: 6rem 2rem;
+    background: var(--background-light);
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+  }
+
+  .section-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 4rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .feature-card-large {
+    background: var(--secondary-dark);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-light);
+    transition: var(--transition-smooth);
+  }
+
+  .feature-card-large:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-blue);
+  }
+
+  .feature-icon-large {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    color: var(--primary-dark);
+  }
+
+  .feature-card-large h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+  }
+
+  .feature-card-large p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-light);
+  }
+
+  .feature-list i {
+    color: var(--success);
+    font-size: 0.9rem;
+  }
+
+  /* How It Works */
+  .how-it-works-detailed {
+    padding: 6rem 2rem;
+    background: var(--primary-dark);
+  }
+
+  .steps-detailed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .step-detailed {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .step-detailed .step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--primary-dark);
+    flex-shrink: 0;
+    font-size: 1.5rem;
+  }
+
+  .step-content h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+  }
+
+  .step-content p {
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+
+  /* Pricing Section */
+  .pricing-section {
+    padding: 6rem 2rem;
+    background: var(--background-light);
+  }
+
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .pricing-card {
+    background: var(--secondary-dark);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-light);
+    position: relative;
+    transition: var(--transition-smooth);
+  }
+
+  .pricing-card.featured {
+    border-color: var(--primary-blue);
+    transform: scale(1.05);
+  }
+
+  .pricing-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    color: var(--primary-dark);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .pricing-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .pricing-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+  }
+
+  .price {
+    font-size: 3rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .price span {
+    font-size: 1rem;
+    color: var(--text-light);
+  }
+
+  .pricing-features {
+    margin-bottom: 2rem;
+  }
+
+  .feature-included {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-light);
+  }
+
+  .feature-included i {
+    color: var(--success);
+  }
+
+  /* FAQ Section */
+  .faq-section {
+    padding: 6rem 2rem;
+    background: var(--primary-dark);
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .faq-item {
+    background: var(--secondary-dark);
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-light);
+  }
+
+  .faq-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+  }
+
+  .faq-item p {
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+
+  /* Final CTA */
+  .final-cta {
+    padding: 6rem 2rem;
+    background: linear-gradient(
+      135deg,
+      var(--secondary-dark) 0%,
+      var(--primary-dark) 100%
+    );
+    text-align: center;
+  }
+
+  .cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+  }
+
+  .cta-content p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .steps-detailed {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-card.featured {
+      transform: none;
+    }
+
+    .hero-actions,
+    .cta-buttons {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-actions .btn,
+    .cta-buttons .btn {
+      width: 100%;
+      max-width: 300px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .learn-hero,
+    .features-overview,
+    .how-it-works-detailed,
+    .pricing-section,
+    .faq-section,
+    .final-cta {
+      padding: 3rem 1rem;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .feature-card-large,
+    .pricing-card {
+      padding: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  // Smooth scrolling for anchor links
+  document.addEventListener("DOMContentLoaded", function () {
+    const anchorLinks = document.querySelectorAll('a[href^="#"]');
+
+    anchorLinks.forEach((link) => {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const targetId = this.getAttribute("href");
+        if (targetId === "#") return;
+
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      });
+    });
+
+    // Add animation to elements on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = "1";
+          entry.target.style.transform = "translateY(0)";
+        }
+      });
+    }, observerOptions);
+
+    // Observe all feature cards and pricing cards
+    document
+      .querySelectorAll(".feature-card-large, .pricing-card, .faq-item")
+      .forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+        observer.observe(el);
+      });
+  });
+</script>
+{% endblock %}
