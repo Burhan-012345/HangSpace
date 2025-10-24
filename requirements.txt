@@ -1,0 +1,21 @@
+# Web Framework
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+Flask-CORS==4.0.0
+
+# Database
+pymongo==4.5.0
+dnspython==2.4.2
+
+# Authentication
+google-auth==2.22.0
+requests==2.31.0
+
+# Real-time Communication
+python-socketio==5.8.0
+python-engineio==4.7.1
+
+# Utilities
+Werkzeug==2.3.7
+Jinja2==3.1.2
+python-dotenv==1.0.0
