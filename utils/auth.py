@@ -17,7 +17,7 @@ class AuthManager:
             'client_id': self.client_id,
             'response_type': 'code',
             'scope': 'openid email profile',
-            'redirect_uri': 'http://localhost:5000/auth/callback',
+            'redirect_uri': 'https://hang1.pythonanywhere.com/auth/callback',
             'access_type': 'offline',
             'prompt': 'consent'
         }
@@ -72,4 +72,5 @@ class AuthManager:
             }
             
         except ValueError:
+
             return None
