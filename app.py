@@ -2989,9 +2989,6 @@ def upload_profile_pic():
         # Save the file
         file.save(file_path)
 
-        # Create thumbnail for smaller display (optional)
-        # You can add PIL/pillow for image processing if needed
-
         # Update user profile with avatar URL
         avatar_url = f"/api/profile-pic/{unique_filename}"
         result = db_manager.update_user_profile(session['user_profile_id'], {'avatar_url': avatar_url})
@@ -3207,22 +3204,6 @@ def startup_checks():
             print(f"❌ {coll_name}: Error - {str(e)}")
 
     print("🎉 Startup checks completed!")
-
-@app.route('/debug/db-status')
-def debug_db_status():
-    try:
-        # Test database connection
-        db_status = db_manager.db.command('ping')
-        collections = db_manager.db.list_collection_names()
-
-        return jsonify({
-            'database_connection': '✅ Connected' if db_status.get('ok') else '❌ Failed',
-            'collections': collections,
-            'users_count': db_manager.users.count_documents({}),
-            'user_profiles_count': db_manager.user_profiles.count_documents({})
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     try:
